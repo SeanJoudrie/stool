@@ -14,6 +14,12 @@ makes no network requests at all after it loads.
 **Live:** https://seanjoudrie.github.io/stool/ — open it on your phone and use
 Share → Add to Home Screen. After that it runs offline like any other app.
 
+> **First-time setup:** GitHub Pages has to be switched on once, by hand, under
+> **Settings → Pages → Build and deployment → Source: GitHub Actions**. The
+> workflow cannot do it for you — creating a Pages site needs admin rights that
+> the workflow token deliberately does not have. Once it is on, every push
+> deploys on its own.
+
 ---
 
 ## Running it
@@ -163,6 +169,9 @@ charts are hand-rolled and how the palette was validated.
 `.github/workflows/deploy.yml` typechecks, tests, builds and publishes to
 GitHub Pages on every push to `main`. It also runs from `claude/**` branches so
 the app is reachable while the first pull request is still open.
+
+Pages must be enabled once by hand first (see above); until it is, the
+`configure-pages` step fails with *Resource not accessible by integration*.
 
 GitHub Pages serves a project site from `/<repo>/`, so the workflow sets
 `APP_BASE=/stool/` for the build. Locally the base stays relative, which keeps

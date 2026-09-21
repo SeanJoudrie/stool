@@ -40,12 +40,12 @@ jobs:
 
       - run: npm test
 
+      # Pages has to be switched on once by hand, under
+      # Settings → Pages → Build and deployment → Source: GitHub Actions.
+      # `enablement: true` cannot do it for you: creating a Pages site needs
+      # admin rights, and the workflow token does not have them.
       - uses: actions/configure-pages@v5
         id: pages
-        with:
-          # Turns Pages on the first time this runs, so nobody has to go and
-          # click it in repository settings.
-          enablement: true
 
       - name: Build
         env:
