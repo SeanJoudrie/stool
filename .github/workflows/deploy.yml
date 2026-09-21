@@ -9,8 +9,6 @@ on:
   push:
     branches:
       - main
-      # So the app is reachable while the first pull request is still open.
-      - 'claude/**'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +17,12 @@ permissions:
   id-token: write
 
 # Never let two deploys race; always finish the one in flight.
+#
+# Only main triggers this. A second trigger on working branches used to exist so
+# the app was reachable before the first merge, and it had to go: resetting a
+# branch onto main fires a run in this same group at the same moment as the
+# merge does, and GitHub cancels one of the pair. A merge silently not
+# deploying is far worse than waiting for a merge to deploy it.
 concurrency:
   group: pages
   cancel-in-progress: false
