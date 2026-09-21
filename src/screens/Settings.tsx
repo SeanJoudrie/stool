@@ -22,13 +22,13 @@ const THEMES: { id: ThemePref; label: string }[] = [
 ]
 
 export function Settings() {
-  const { settings, saveSettings, stool, food, daily, reload, toast } = useStore()
+  const { settings, saveSettings, stool, food, reload, toast } = useStore()
   const [usage, setUsage] = useState<{ usage: number; quota: number } | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     void db.estimateUsage().then(setUsage)
-  }, [stool.length, food.length, daily.length])
+  }, [stool.length, food.length])
 
   async function handleExport(includePhotos: boolean) {
     setBusy(true)
@@ -54,7 +54,7 @@ export function Settings() {
     try {
       const result = await db.importAll(JSON.parse(await file.text()))
       await reload()
-      toast(`Imported ${result.stool} events, ${result.food} meals, ${result.daily} days`)
+      toast(`Imported ${result.stool} entries and ${result.food} meals`)
     } catch (e) {
       toast(e instanceof Error ? e.message : 'That file could not be imported')
     } finally {
@@ -72,7 +72,6 @@ export function Settings() {
       const seed = buildSeedEpisode()
       for (const e of seed.stool) await db.putStool(e)
       for (const e of seed.food) await db.putFood(e)
-      for (const e of seed.daily) await db.putDaily(e)
       await reload()
       toast('Episode added — check the times')
     } catch (e) {
@@ -107,30 +106,15 @@ export function Settings() {
       <main className="main">
         <div className="stack">
           <Card title="You">
-            <div className="stack">
-              <NumberField
-                label="Body weight"
-                hint="Used to turn fluid loss into a replacement target. Fluid loss hits a smaller body proportionally harder."
-                value={settings.bodyWeightLb}
-                onChange={(v) => void saveSettings({ bodyWeightLb: v })}
-                suffix="lb"
-                step={1}
-                placeholder="130"
-              />
-              <NumberField
-                label="Daily water target"
-                value={settings.waterTargetOz}
-                onChange={(v) => void saveSettings({ waterTargetOz: v ?? 100 })}
-                suffix="oz"
-                step={8}
-              />
-              <SwitchRow
-                label="Show service fields"
-                hint="Adds drill weekend, field food and ruck/run to the daily check-in."
-                checked={settings.guardFields}
-                onChange={(v) => void saveSettings({ guardFields: v })}
-              />
-            </div>
+            <NumberField
+              label="Body weight"
+              hint="Optional, and the only number here. It turns “you lost a lot of fluid today” into an amount worth drinking — a bad day costs a smaller person proportionally more. Leave it blank and a general figure is used instead."
+              value={settings.bodyWeightLb}
+              onChange={(v) => void saveSettings({ bodyWeightLb: v })}
+              suffix="lb"
+              step={1}
+              placeholder="optional"
+            />
           </Card>
 
           <Card title="Appearance">
@@ -168,8 +152,8 @@ export function Settings() {
             title="Your data"
             subtitle={
               usage
-                ? `${stool.length} events, ${food.length} meals, ${daily.length} check-ins — using ${formatBytes(usage.usage)}.`
-                : `${stool.length} events, ${food.length} meals, ${daily.length} check-ins.`
+                ? `${stool.length} entries and ${food.length} meals, using ${formatBytes(usage.usage)}.`
+                : `${stool.length} entries and ${food.length} meals.`
             }
           >
             <div className="stack stack--tight">
@@ -236,9 +220,9 @@ export function Settings() {
           <Card title="About">
             <div className="stack stack--tight">
               <p className="small">
-                A stool and food journal for people managing GI symptoms. It records what happened
-                and when, finds associations in your own data, and produces a record you can hand to
-                a gastroenterologist.
+                A poop journal. It records what happened and when, notices what tends to come
+                before a bad one, and prints something you can hand to a doctor. That is all it
+                does, on purpose.
               </p>
               <p className="small muted">
                 It is not a medical device and cannot diagnose anything. If something in here worries

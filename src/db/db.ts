@@ -9,7 +9,6 @@
  */
 import {
   DEFAULT_SETTINGS,
-  type DailyEntry,
   type FoodEntry,
   type PhotoRecord,
   type Settings,
@@ -17,12 +16,13 @@ import {
 } from './schema'
 
 const DB_NAME = 'stool-journal'
-const DB_VERSION = 1
+// v2 drops the daily check-in store. Existing journals keep their stool, food
+// and photo records; the abandoned store is deleted on upgrade.
+const DB_VERSION = 2
 
 export const STORE = {
   stool: 'stool',
   food: 'food',
-  daily: 'daily',
   photos: 'photos',
   settings: 'settings',
 } as const
@@ -47,15 +47,13 @@ export function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE.food)) {
         db.createObjectStore(STORE.food, { keyPath: 'id' }).createIndex('ts', 'ts')
       }
-      if (!db.objectStoreNames.contains(STORE.daily)) {
-        db.createObjectStore(STORE.daily, { keyPath: 'id' })
-      }
       if (!db.objectStoreNames.contains(STORE.photos)) {
         db.createObjectStore(STORE.photos, { keyPath: 'id' })
       }
       if (!db.objectStoreNames.contains(STORE.settings)) {
         db.createObjectStore(STORE.settings, { keyPath: 'id' })
       }
+      if (db.objectStoreNames.contains('daily')) db.deleteObjectStore('daily')
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error ?? new Error('Could not open the journal database.'))
@@ -115,14 +113,6 @@ export const getFood = (id: string) =>
 export const listFood = (from?: number, to?: number) =>
   getAllInRange<FoodEntry>(STORE.food, from, to)
 
-// -- daily ---------------------------------------------------------------
-
-export const putDaily = (e: DailyEntry) => tx(STORE.daily, 'readwrite', (s) => s.put(e))
-export const getDaily = (dateKey: string) =>
-  tx<DailyEntry | undefined>(STORE.daily, 'readonly', (s) => s.get(dateKey))
-export const listDaily = () => tx<DailyEntry[]>(STORE.daily, 'readonly', (s) => s.getAll())
-export const deleteDaily = (id: string) => tx(STORE.daily, 'readwrite', (s) => s.delete(id))
-
 // -- photos --------------------------------------------------------------
 
 export const putPhoto = (p: PhotoRecord) => tx(STORE.photos, 'readwrite', (s) => s.put(p))
@@ -150,7 +140,6 @@ export interface ExportBundle {
   settings: Settings
   stool: StoolEntry[]
   food: FoodEntry[]
-  daily: DailyEntry[]
   /** Present only when the user explicitly opts to include images. */
   photos?: { id: string; mime: string; width: number; height: number; dataUrl: string }[]
 }
@@ -170,12 +159,7 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 }
 
 export async function exportAll(includePhotos: boolean): Promise<ExportBundle> {
-  const [settings, stool, food, daily] = await Promise.all([
-    getSettings(),
-    listStool(),
-    listFood(),
-    listDaily(),
-  ])
+  const [settings, stool, food] = await Promise.all([getSettings(), listStool(), listFood()])
   const bundle: ExportBundle = {
     format: 'stool-journal-export',
     version: 1,
@@ -183,7 +167,6 @@ export async function exportAll(includePhotos: boolean): Promise<ExportBundle> {
     settings,
     stool,
     food,
-    daily,
   }
   if (includePhotos) {
     const ids = await listPhotoIds()
@@ -207,7 +190,6 @@ export async function exportAll(includePhotos: boolean): Promise<ExportBundle> {
 export interface ImportResult {
   stool: number
   food: number
-  daily: number
   photos: number
 }
 
@@ -224,7 +206,7 @@ export async function importAll(bundle: unknown): Promise<ImportResult> {
     throw new Error('That file is not a journal export.')
   }
   const b = bundle as ExportBundle
-  const result: ImportResult = { stool: 0, food: 0, daily: 0, photos: 0 }
+  const result: ImportResult = { stool: 0, food: 0, photos: 0 }
 
   for (const e of b.stool ?? []) {
     await putStool(e)
@@ -233,10 +215,6 @@ export async function importAll(bundle: unknown): Promise<ImportResult> {
   for (const e of b.food ?? []) {
     await putFood(e)
     result.food++
-  }
-  for (const e of b.daily ?? []) {
-    await putDaily(e)
-    result.daily++
   }
   for (const p of b.photos ?? []) {
     await putPhoto({
@@ -255,7 +233,7 @@ export async function importAll(bundle: unknown): Promise<ImportResult> {
 export async function wipeAll(): Promise<void> {
   const db = await openDb()
   await new Promise<void>((resolve, reject) => {
-    const names: StoreName[] = [STORE.stool, STORE.food, STORE.daily, STORE.photos, STORE.settings]
+    const names: StoreName[] = [STORE.stool, STORE.food, STORE.photos, STORE.settings]
     const transaction = db.transaction(names, 'readwrite')
     for (const n of names) transaction.objectStore(n).clear()
     transaction.oncomplete = () => resolve()

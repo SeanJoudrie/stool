@@ -27,17 +27,14 @@ import {
 import { IconFood, IconReport } from '../components/icons'
 
 const CONFIDENCE_COPY: Record<Correlation['confidence'], string> = {
-  preliminary: 'Early — not many instances yet',
-  emerging: 'Holding up so far',
-  consistent: 'Seen across enough events to act on',
+  preliminary: 'Only seen a few times so far',
+  emerging: 'Held up over a few weeks',
+  consistent: 'Seen enough times to be worth trying',
 }
 
 export function Insights() {
-  const { stool, food, daily, settings } = useStore()
-  const result = useMemo(
-    () => analyse(stool, food, daily, settings.waterTargetOz),
-    [stool, food, daily, settings.waterTargetOz],
-  )
+  const { stool, food } = useStore()
+  const result = useMemo(() => analyse(stool, food), [stool, food])
   const headline = useMemo(() => headlineFor(stool), [stool])
 
   const { summary } = result
@@ -148,8 +145,8 @@ export function Insights() {
           {result.ready && result.triggers.length > 0 && (
             <>
               <ChartFrame
-                title="What tends to come first"
-                subtitle={`How often a rough stool followed each of these, against your usual rate of ${Math.round(baseline * 100)}%.`}
+                title="What keeps showing up first"
+                subtitle={`How often a bad one followed each of these. You average ${Math.round(baseline * 100)}%.`}
                 table={
                   <table className="table">
                     <thead>
@@ -180,31 +177,31 @@ export function Insights() {
                 <CorrelationCard key={c.key} correlation={c} />
               ))}
 
-              <Alert tone="warning" title="This is a hint, not a verdict">
-                These are patterns in your own log, not proof of cause. Several things are tested at
-                once, so some will be coincidence. Worth testing on purpose, or mentioning to a
-                doctor — not worth cutting foods out over on its own.
+              <Alert tone="warning" title="Do what you want with this">
+                These are just patterns in your own log. Lots of things get compared at once, so
+                some of this will be coincidence. If something here looks right, try cutting back
+                for a couple of weeks and see whether the log changes. If it keeps happening, tell
+                a doctor — I'm not one.
               </Alert>
             </>
           )}
 
           {/* The nudge, only where it is actually the missing piece. */}
           {!result.ready && summary.totalEvents > 0 && (
-            <Card title={hasFood ? 'Still gathering' : 'Want to find food triggers?'}>
+            <Card title={hasFood ? 'Not enough yet' : 'Want to know what sets it off?'}>
               <div className="stack stack--tight">
                 {hasFood ? (
                   <p className="small">{result.reason}</p>
                 ) : (
                   <>
                     <p className="small">
-                      You are logging stools, which is the important half. If you also log roughly
-                      what you eat and when, this screen can start looking for what tends to come
-                      before a bad one.
+                      You are logging poops, which is the half that matters. Log roughly what you
+                      eat too and this can start telling you what tends to come before a bad one.
                     </p>
                     <p className="small muted">
-                      It needs about {THRESHOLDS.minEventsForAnalysis} stool entries across a week
-                      or so, with meals logged alongside. No calories, no weighing — just what and
-                      when.
+                      Needs about {THRESHOLDS.minEventsForAnalysis} entries over a week or so, with
+                      meals alongside. No calories, no weighing, no portions — just what and
+                      roughly when.
                     </p>
                     <button
                       className="btn btn--secondary btn--block"
@@ -220,10 +217,9 @@ export function Insights() {
           )}
 
           {result.ready && result.triggers.length === 0 && (
-            <Alert tone="good" title="Nothing stands out">
-              No single food or habit in your log lines up with your bad days often enough to be
-              worth calling a pattern. That is a real answer, not a blank — it means the cause is
-              not something obvious you are eating.
+            <Alert tone="good" title="Nothing jumps out">
+              Nothing you eat lines up with your bad ones often enough to point at. That is an
+              actual answer, not a blank screen — it means it probably is not one obvious food.
             </Alert>
           )}
 
@@ -232,7 +228,7 @@ export function Insights() {
               <IconReport />
               <span className="wide-tile__text">
                 <span className="tile__title">Make a doctor’s report</span>
-                <span className="tile__hint">Everything above, printable</span>
+                <span className="tile__hint">Printable, if you are seeing someone about it</span>
               </span>
             </button>
           )}
@@ -240,14 +236,14 @@ export function Insights() {
           <details className="more">
             <summary>
               How this is worked out
-              <span className="more__hint">the method</span>
+              <span className="more__hint">if you care</span>
             </summary>
             <div className="more__body">
               <div className="stack stack--tight">
                 <p className="small">
-                  For every stool entry, the log is checked backwards over 2, 6, 12, 24 and 48
-                  hours to see what you had eaten. Each food is then compared against the times you
-                  did not have it.
+                  For every entry, the log gets checked backwards over 2, 6, 12, 24 and 48 hours to
+                  see what you had eaten. Each food is compared against all the times you did not
+                  have it.
                 </p>
                 <p className="small">
                   Something is only shown if it appears before at least {THRESHOLDS.minExposed} bad
@@ -273,28 +269,31 @@ export function Insights() {
 }
 
 function CorrelationCard({ correlation: c }: { correlation: Correlation }) {
+  const food = c.label.toLowerCase()
   return (
     <Card title={c.label}>
       <div className="stack stack--tight">
-        <p className="small">
+        <p>
           <strong>
-            {c.exposedPoor} of {c.exposedCount} times
+            {c.exposedPoor} of the {c.exposedCount} times
           </strong>{' '}
-          you had {c.label.toLowerCase()}, a rough stool followed within {c.windowHours} hours —{' '}
-          {Math.round(c.exposedRate * 100)}%, against {Math.round(c.unexposedRate * 100)}% the{' '}
-          {c.unexposedCount} times you did not.
+          you had {food}, a bad one followed within {c.windowHours} hours. The{' '}
+          {c.unexposedCount} times you did not, it was {Math.round(c.unexposedRate * 100)}%.
+        </p>
+        <p className="small">
+          Maybe try less {food} for a couple of weeks and see whether this screen changes. Maybe it
+          is nothing. Up to you — I'm not a doctor.
         </p>
         {c.medianGapHours !== null && (
-          <p className="small">
-            Usually about <strong>{formatGap(c.medianGapHours)}</strong> later.{' '}
+          <p className="small muted">
+            Usually about {formatGap(c.medianGapHours)} later.{' '}
             {c.medianGapHours <= 4
-              ? 'That is fast — more like an intolerance than something that went off.'
+              ? 'That is quick, which tends to mean your body just does not get on with it.'
               : c.medianGapHours >= 10
-                ? 'That is slow — more like something that did not agree with you than a direct intolerance.'
+                ? 'That is slow, which is less like an intolerance and more like something that did not agree with you.'
                 : null}
           </p>
         )}
-        <p className="small muted">{c.note}</p>
         <p className="xsmall">
           <span className="badge badge--wrap">{CONFIDENCE_COPY[c.confidence]}</span>
         </p>

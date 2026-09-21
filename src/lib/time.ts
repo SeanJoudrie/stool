@@ -3,7 +3,7 @@
 export const HOUR = 3_600_000
 export const DAY = 86_400_000
 
-/** `YYYY-MM-DD` in local time — the key used for daily check-ins. */
+/** `YYYY-MM-DD` in local time — used to group entries by day. */
 export function dateKey(ts: number | Date): string {
   const d = ts instanceof Date ? ts : new Date(ts)
   const y = d.getFullYear()

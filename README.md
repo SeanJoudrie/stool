@@ -1,12 +1,18 @@
-# Stool — a GI journal
+# Stool — a poop journal
 
-A stool and food journal for people managing digestive symptoms. It records
-what happened and when, finds associations in your own data, and produces a
-record you can hand to a gastroenterologist.
+A poop journal. It records what happened and when, notices what tends to come
+before a bad one, and prints something you can hand to a doctor.
+
+That is the whole product. It is not a fitness app, not a nutrition tracker and
+not a health dashboard. There is no sleep, no weight log, no streaks, no goals
+and no score. Meals are logged only because they are what makes "dairy keeps
+showing up before your bad ones" possible, and water rides along with a meal
+because it is the one drink that reliably changes things — it does not get a
+screen or a target.
 
 It is built around one observation: a GI appointment is short, and recall under
 questioning is poor. "A few times a week, sometimes bad" is not something a
-doctor can act on. A dated log with form, timing, pain and dietary exposure is.
+doctor can act on. A dated log with form, timing and pain is.
 
 **All data stays on the device.** There is no account, no server, and the app
 makes no network requests at all after it loads.
@@ -40,9 +46,9 @@ sheet and then runs offline. That is the intended way to use it — see
 
 ## What it does
 
-**Four things on the home screen**, in the order they get used: log a stool,
-log a meal, view history, analyse for patterns. Nothing else competes with
-them.
+**Four things on the home screen**, and only four: log a stool, log a meal,
+view history, analyse for patterns. Nothing else competes with them, and
+nothing else gets added.
 
 **Logging, in under twenty seconds.** The entry form is the whole ballgame: if
 logging an event in a bathroom takes longer than that, it stops happening and
@@ -75,19 +81,23 @@ twelve-to-twenty-four hour foodborne or inflammatory one. Items are auto-tagged
 **Correlation, with the brakes on.** See [the analysis](#the-analysis) below.
 The patterns screen opens with one plain sentence that works from stool entries
 alone, because most people will only ever log the bad ones and should never be
-told they are using it wrong.
+told they are using it wrong. Where a pattern does hold up it says so plainly —
+"maybe try less dairy for a couple of weeks and see" — and then says it is not
+a doctor, because it is not.
 
-**Red flags.** Blood, black or tarry stool, prolonged diarrhoea, nocturnal
-diarrhoea, fever above 101.5°F, volume-depletion signs and unintended weight
-loss each raise a note explaining what that class of finding warrants. The app
-states what it observed; it never names a condition, and it never tells anyone
-they are fine.
+**Red flags.** Blood, black or tarry stool, pale stool, severe pain, prolonged
+diarrhoea, diarrhoea that wakes you, and repeated bad episodes each raise a
+note explaining what that class of finding warrants. Everything is derived from
+stool entries alone — the fever, weight-loss and dehydration-sign rules were
+removed along with the daily check-in, because a rule with no honest data
+behind it is worse than no rule. The app states what it observed; it never
+names a condition, and it never tells anyone they are fine.
 
-**Fluid replacement.** Loose events are converted to an estimated loss and a
-replacement target in ounces, scaled by body weight — because the same litre
-costs a 130 lb person twice what it costs a 260 lb one, and impairment starts
-around 2% of body weight. That is why an afternoon can vanish after a bad
-morning.
+**Fluid replacement.** Loose events are converted to an estimated loss and an
+amount worth drinking, scaled by body weight if you supplied one — the same
+litre costs a 130 lb person twice what it costs a 260 lb one, and impairment
+starts around 2% of body weight. That is why an afternoon can vanish after a
+bad morning. Body weight is one optional field in Settings; it is not a log.
 
 **A report that prints.** Summary, flagged findings, form distribution, dietary
 associations with raw counts, notable events, and the complete log — in the
@@ -142,7 +152,7 @@ test deliberately, or to hand to a doctor.
 
 ```
 src/
-  db/schema.ts      the record shape — every field earns its place
+  db/schema.ts      the record shape — two kinds of entry, nothing else
   db/db.ts          IndexedDB, export/import/wipe
   lib/parse.ts      speech → structured entry (rule-based, offline)
   lib/foodTags.ts   keyword dictionary for exposure tagging

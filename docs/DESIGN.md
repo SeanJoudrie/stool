@@ -106,6 +106,30 @@ bulk.
 The brand green and the "good" green are deliberately different steps, so app
 chrome never reads as a rating.
 
+## Scope, and what got deleted
+
+The first builds drifted. A daily check-in appeared with sleep, weight, stress,
+fatigue, temperature, caffeine, travel, medications and a set of
+service-specific fields, plus correlations built on all of them. Every piece
+was individually defensible and the sum was a health dashboard.
+
+It was cut back to one thing. A poop journal logs poops. Meals survive only
+because they are the mechanism behind "dairy keeps showing up before your bad
+ones". Water survives as ounces attached to a meal, because it is the one drink
+that reliably moves stool and because that costs no screen, no target and no
+streak.
+
+The deletions had consequences and they were taken rather than worked around:
+the fever, unintended-weight-loss and volume-depletion red flags went with the
+data that fed them, and the sleep, stress, travel and drill-weekend
+correlations went with theirs. What remains — blood, black or pale stool,
+severe pain, prolonged and nocturnal diarrhoea, repeated bad episodes — all
+comes from stool entries, which are the only thing the app can honestly claim
+to know about.
+
+The database went to v2 and drops the old `daily` store on upgrade. Existing
+stool, food and photo records are untouched.
+
 ## Ordering, and what goes behind a disclosure
 
 The first build put every field on one screen in clinical order. That is the

@@ -24,7 +24,6 @@ import {
   FOOD_TAGS,
   FOOD_TAG_LABEL,
   bristolBand,
-  type DailyEntry,
   type FoodEntry,
   type FoodTag,
   type StoolEntry,
@@ -105,35 +104,6 @@ export function effectiveRating(e: StoolEntry): number | null {
 
 // ------------------------------------------------------------- exposures ---
 
-export type FactorKey =
-  | 'low-water'
-  | 'short-sleep'
-  | 'high-stress'
-  | 'travel'
-  | 'drill-weekend'
-  | 'field-food'
-  | 'ruck-or-run'
-
-const FACTOR_LABEL: Record<FactorKey, string> = {
-  'low-water': 'Low water intake',
-  'short-sleep': 'Under 6 hours sleep',
-  'high-stress': 'High stress (7+)',
-  travel: 'Travel day',
-  'drill-weekend': 'Drill weekend',
-  'field-food': 'Field food / MRE',
-  'ruck-or-run': 'Ruck or run',
-}
-
-const FACTOR_NOTE: Record<FactorKey, string> = {
-  'low-water': 'Dehydration both hardens stool and worsens fluid loss during an episode.',
-  'short-sleep': 'Short sleep raises gut sensitivity and shifts motility.',
-  'high-stress': 'The gut–brain axis is a direct, well-documented pathway.',
-  travel: 'Sitting for hours, low fibre and low fluid together cause travel constipation.',
-  'drill-weekend': 'Irregular eating, dehydration, stress and physical load stack on these days.',
-  'field-food': 'Field rations are near-zero fibre and reliably back people up.',
-  'ruck-or-run': 'Exercise-induced GI distress is more likely with a fast baseline transit.',
-}
-
 interface Exposure {
   tags: Set<FoodTag>
   items: Set<string>
@@ -165,36 +135,13 @@ function exposuresWithin(event: StoolEntry, foods: FoodEntry[], windowHours: num
   return { tags, items, firstSeen }
 }
 
-/**
- * The daily record an event belongs to. An event before 5 a.m. is attributed
- * to the previous day, because what caused it happened the day before.
- */
-function dailyKeyForEvent(event: StoolEntry): string {
-  if (isOvernight(event.ts)) return dateKey(event.ts - 12 * HOUR)
-  return dateKey(event.ts)
-}
-
-function factorsForEvent(event: StoolEntry, dailyByKey: Map<string, DailyEntry>, waterTargetOz: number): Set<FactorKey> {
-  const set = new Set<FactorKey>()
-  const d = dailyByKey.get(dailyKeyForEvent(event))
-  if (!d) return set
-  if (d.waterOz !== null && d.waterOz < waterTargetOz * 0.6) set.add('low-water')
-  if (d.sleepHours !== null && d.sleepHours < 6) set.add('short-sleep')
-  if (d.stress !== null && d.stress >= 7) set.add('high-stress')
-  if (d.travel) set.add('travel')
-  if (d.drillWeekend) set.add('drill-weekend')
-  if (d.fieldFood) set.add('field-food')
-  if (d.ruckOrRun) set.add('ruck-or-run')
-  return set
-}
-
 // ----------------------------------------------------------- correlation ---
 
 export type Confidence = 'preliminary' | 'emerging' | 'consistent'
 
 export interface Correlation {
   key: string
-  kind: 'tag' | 'item' | 'factor'
+  kind: 'tag' | 'item'
   label: string
   note: string
   windowHours: number
@@ -229,7 +176,7 @@ interface Candidate {
   kind: Correlation['kind']
   label: string
   note: string
-  present: (ex: Exposure, factors: Set<FactorKey>) => boolean
+  present: (ex: Exposure) => boolean
   gapKey?: string
 }
 
@@ -237,7 +184,6 @@ function buildCorrelation(
   candidate: Candidate,
   events: StoolEntry[],
   exposureByEvent: Map<string, Exposure>,
-  factorsByEvent: Map<string, Set<FactorKey>>,
   windowHours: number,
 ): Correlation | null {
   let exposedCount = 0
@@ -248,10 +194,9 @@ function buildCorrelation(
 
   for (const e of events) {
     const ex = exposureByEvent.get(e.id)
-    const factors = factorsByEvent.get(e.id)
-    if (!ex || !factors) continue
+    if (!ex) continue
     const poor = isPoorEvent(e)
-    if (candidate.present(ex, factors)) {
+    if (candidate.present(ex)) {
       exposedCount++
       if (poor) {
         exposedPoor++
@@ -304,8 +249,8 @@ export interface Summary {
   overnightEvents: number
   bloodEvents: number
   poorEvents: number
+  /** Ounces of water logged per day alongside meals, when any were. */
   avgWaterOz: number | null
-  avgSleepHours: number | null
   longestGapDays: number | null
 }
 
@@ -415,9 +360,9 @@ export interface AnalysisResult {
   protective: Correlation[]
 }
 
-function summarize(stool: StoolEntry[], daily: DailyEntry[]): Summary {
+function summarize(stool: StoolEntry[], food: FoodEntry[]): Summary {
   const days = new Set(stool.map((e) => dateKey(e.ts)))
-  for (const d of daily) days.add(d.id)
+  for (const f of food) days.add(dateKey(f.ts))
   const daysLogged = days.size || 1
 
   const ratings = stool.map(effectiveRating).filter((r): r is number => r !== null)
@@ -425,8 +370,15 @@ function summarize(stool: StoolEntry[], daily: DailyEntry[]): Summary {
   const inBand = stool.filter((e) => e.bristol !== null && bristolBand(e.bristol) === 'normal').length
   const withBristol = stool.filter((e) => e.bristol !== null).length
 
-  const waters = daily.map((d) => d.waterOz).filter((w): w is number => w !== null)
-  const sleeps = daily.map((d) => d.sleepHours).filter((s): s is number => s !== null)
+  // Water is logged against meals, so it totals per day rather than averaging
+  // over entries.
+  const waterByDay = new Map<string, number>()
+  for (const f of food) {
+    if (f.waterOz === null) continue
+    const key = dateKey(f.ts)
+    waterByDay.set(key, (waterByDay.get(key) ?? 0) + f.waterOz)
+  }
+  const waters = [...waterByDay.values()]
 
   // Longest run of days with no stool event at all — a constipation signal.
   let longestGapDays: number | null = null
@@ -449,24 +401,17 @@ function summarize(stool: StoolEntry[], daily: DailyEntry[]): Summary {
     bloodEvents: stool.filter((e) => e.flags.includes('blood') || e.color === 'red' || e.color === 'black').length,
     poorEvents: stool.filter(isPoorEvent).length,
     avgWaterOz: mean(waters),
-    avgSleepHours: mean(sleeps),
     longestGapDays,
   }
 }
 
 // ------------------------------------------------------------------ main ---
 
-export function analyse(
-  stool: StoolEntry[],
-  food: FoodEntry[],
-  daily: DailyEntry[],
-  waterTargetOz = 100,
-): AnalysisResult {
+export function analyse(stool: StoolEntry[], food: FoodEntry[]): AnalysisResult {
   const events = [...stool].sort((a, b) => a.ts - b.ts)
   const foods = [...food].sort((a, b) => a.ts - b.ts)
-  const dailyByKey = new Map(daily.map((d) => [d.id, d]))
 
-  const summary = summarize(events, daily)
+  const summary = summarize(events, foods)
 
   const bristolCounts = new Map<number, number>()
   for (const e of events) if (e.bristol !== null) bristolCounts.set(e.bristol, (bristolCounts.get(e.bristol) ?? 0) + 1)
@@ -538,23 +483,14 @@ export function analyse(
     }
   }
 
-  const candidates: Candidate[] = [
-    ...FOOD_TAGS.map<Candidate>((t) => ({
-      key: `tag:${t.id}`,
-      kind: 'tag',
-      label: t.label,
-      note: t.note,
-      gapKey: t.id,
-      present: (ex) => ex.tags.has(t.id),
-    })),
-    ...(Object.keys(FACTOR_LABEL) as FactorKey[]).map<Candidate>((f) => ({
-      key: `factor:${f}`,
-      kind: 'factor',
-      label: FACTOR_LABEL[f],
-      note: FACTOR_NOTE[f],
-      present: (_ex, factors) => factors.has(f),
-    })),
-  ]
+  const candidates: Candidate[] = FOOD_TAGS.map<Candidate>((t) => ({
+    key: `tag:${t.id}`,
+    kind: 'tag',
+    label: t.label,
+    note: t.note,
+    gapKey: t.id,
+    present: (ex) => ex.tags.has(t.id),
+  }))
 
   // Individual items only become candidates once they recur often enough to
   // possibly clear the threshold — this keeps the comparison count down.
@@ -577,9 +513,6 @@ export function analyse(
     })
   }
 
-  const factorsByEvent = new Map<string, Set<FactorKey>>()
-  for (const e of analysable) factorsByEvent.set(e.id, factorsForEvent(e, dailyByKey, waterTargetOz))
-
   // Best-window search per candidate. Testing five windows inflates the chance
   // of a spurious hit, which is why the surfacing threshold is a rate
   // *difference* rather than mere significance, and why confidence is reported
@@ -590,7 +523,7 @@ export function analyse(
     for (const e of analysable) exposureByEvent.set(e.id, exposuresWithin(e, foods, w))
 
     for (const c of candidates) {
-      const corr = buildCorrelation(c, analysable, exposureByEvent, factorsByEvent, w)
+      const corr = buildCorrelation(c, analysable, exposureByEvent, w)
       if (!corr) continue
       const prev = bestByKey.get(c.key)
       if (!prev || Math.abs(corr.lift) > Math.abs(prev.lift)) bestByKey.set(c.key, corr)

@@ -3,7 +3,7 @@ import { analyse, deriveRating, headlineFor, isPoorEvent, THRESHOLDS } from '../
 import { ratingTier } from '../src/components/RatingDot'
 import { hydrationPlan } from '../src/lib/hydration'
 import { allFlags } from '../src/lib/redflags'
-import type { DailyEntry, FoodEntry, StoolEntry } from '../src/db/schema'
+import type { FoodEntry, StoolEntry } from '../src/db/schema'
 
 const HOUR = 3_600_000
 const DAY = 86_400_000
@@ -18,19 +18,15 @@ function stool(ts: number, over: Partial<StoolEntry> = {}): StoolEntry {
   }
 }
 
-function food(ts: number, tags: FoodEntry['tags'], items: string[] = ['thing']): FoodEntry {
+function food(
+  ts: number,
+  tags: FoodEntry['tags'],
+  items: string[] = ['thing'],
+  waterOz: number | null = null,
+): FoodEntry {
   return {
-    id: `f${ts}-${Math.random()}`, kind: 'food', ts, items, tags,
+    id: `f${ts}-${Math.random()}`, kind: 'food', ts, items, tags, waterOz,
     mealKind: 'meal', notes: '', source: 'manual', createdAt: ts, updatedAt: ts,
-  }
-}
-
-function daily(id: string, over: Partial<DailyEntry> = {}): DailyEntry {
-  return {
-    id, kind: 'daily', waterOz: null, sleepHours: null, stress: null, fatigue: null,
-    bloating: null, gas: null, nausea: null, travel: false, weightLb: null, meds: [],
-    caffeineDrinks: null, feverF: null, dehydrationSigns: false, drillWeekend: false,
-    fieldFood: false, ruckOrRun: false, notes: '', createdAt: 0, updatedAt: 0, ...over,
   }
 }
 
@@ -57,7 +53,7 @@ describe('deriveRating', () => {
 describe('analyse', () => {
   it('refuses to report anything below the evidence threshold', () => {
     const events = [stool(NOW - DAY), stool(NOW - 2 * DAY)]
-    const result = analyse(events, [food(NOW - DAY - HOUR, ['dairy'])], [])
+    const result = analyse(events, [food(NOW - DAY - HOUR, ['dairy'])])
     expect(result.ready).toBe(false)
     expect(result.triggers).toHaveLength(0)
     expect(result.reason).toContain('stool events')
@@ -75,7 +71,7 @@ describe('analyse', () => {
         stool(base + 3 * HOUR, withDairy ? { bristol: 7, pain: 8, urgency: 9 } : { bristol: 4 }),
       )
     }
-    const result = analyse(stools, foods, [])
+    const result = analyse(stools, foods)
     expect(result.ready).toBe(true)
     const dairy = result.triggers.find((t) => t.key === 'tag:dairy')
     expect(dairy).toBeDefined()
@@ -89,7 +85,7 @@ describe('analyse', () => {
 
   it('excludes events with no food logged in the previous 24 hours', () => {
     const stools = Array.from({ length: 12 }, (_, i) => stool(NOW - (i + 1) * DAY, { bristol: 7 }))
-    const result = analyse(stools, [], [])
+    const result = analyse(stools, [])
     expect(result.coverage.eventsAnalysed).toBe(0)
     expect(result.ready).toBe(false)
     expect(result.reason).toContain('food logged')
@@ -97,7 +93,7 @@ describe('analyse', () => {
 
   it('buckets events into one column per day, including empty days', () => {
     const stools = [stool(NOW - 4 * DAY, { bristol: 7 }), stool(NOW, { bristol: 4 })]
-    const result = analyse(stools, [], [])
+    const result = analyse(stools, [])
     expect(result.days).toHaveLength(5)
     expect(result.days[0]!.loose).toBe(1)
     expect(result.days[1]!.total).toBe(0)
@@ -111,13 +107,13 @@ describe('analyse', () => {
 
 describe('red flags', () => {
   it('raises blood as urgent', () => {
-    const flags = allFlags([stool(NOW, { flags: ['blood'] })], [], NOW)
+    const flags = allFlags([stool(NOW, { flags: ['blood'] })], NOW)
     expect(flags.find((f) => f.id === 'blood')?.severity).toBe('urgent')
   })
 
   it('raises a run of loose stool lasting beyond 48 hours', () => {
     const events = [0, 24, 48, 60].map((h) => stool(NOW - (72 - h) * HOUR, { bristol: 7 }))
-    const flags = allFlags(events, [], NOW)
+    const flags = allFlags(events, NOW)
     expect(flags.some((f) => f.id === 'sustained-diarrhoea')).toBe(true)
   })
 
@@ -127,18 +123,9 @@ describe('red flags', () => {
       stool(NOW - 36 * HOUR, { bristol: 4 }),
       stool(NOW - 2 * HOUR, { bristol: 7 }),
     ]
-    expect(allFlags(events, [], NOW).some((f) => f.id === 'sustained-diarrhoea')).toBe(false)
+    expect(allFlags(events, NOW).some((f) => f.id === 'sustained-diarrhoea')).toBe(false)
   })
 
-  it('raises unintended weight loss past 5 per cent', () => {
-    const flags = allFlags([], [daily('2026-09-01', { weightLb: 140 }), daily('2026-09-20', { weightLb: 130 })], NOW)
-    expect(flags.some((f) => f.id === 'weight-loss')).toBe(true)
-  })
-
-  it('raises a fever above 101.5', () => {
-    expect(allFlags([], [daily('2026-09-20', { feverF: 102.2 })], NOW).some((f) => f.id === 'fever')).toBe(true)
-    expect(allFlags([], [daily('2026-09-20', { feverF: 99.8 })], NOW).some((f) => f.id === 'fever')).toBe(false)
-  })
 })
 
 describe('hydration', () => {
@@ -185,7 +172,7 @@ describe('ubiquity guard', () => {
       foods.push(food(base, hasCaffeine ? ['caffeine'] : ['high-fiber']))
       stools.push(stool(base + 3 * HOUR, hasCaffeine && d % 4 === 0 ? { bristol: 7, pain: 8 } : { bristol: 4 }))
     }
-    const result = analyse(stools, foods, [])
+    const result = analyse(stools, foods)
     expect(result.ready).toBe(true)
     expect(result.triggers.find((t) => t.key === 'tag:caffeine')).toBeUndefined()
   })
@@ -199,7 +186,7 @@ describe('ubiquity guard', () => {
       foods.push(food(base, withDairy ? ['dairy'] : ['high-fiber']))
       stools.push(stool(base + 2 * HOUR, withDairy ? { bristol: 7, pain: 8 } : { bristol: 4 }))
     }
-    const result = analyse(stools, foods, [])
+    const result = analyse(stools, foods)
     expect(result.triggers.find((t) => t.key === 'tag:dairy')).toBeDefined()
   })
 })
@@ -260,5 +247,57 @@ describe('headline copy in the singular', () => {
     const fine = headlineFor([stool(NOW, { bristol: 4 })], NOW)
     expect(fine.sentence).toContain('One entry so far')
     expect(fine.sentence).not.toContain('1 of them')
+  })
+})
+
+describe('water, now that it rides on meals', () => {
+  it('totals per day rather than averaging per entry', () => {
+    const stools = [stool(NOW, { bristol: 4 })]
+    const foods = [
+      food(NOW - HOUR, [], ['breakfast'], 16),
+      food(NOW - 2 * HOUR, [], ['coffee'], 8),
+      food(NOW - 25 * HOUR, [], ['dinner'], 40),
+    ]
+    // 24 oz on the first day, 40 on the other → mean of the two day totals.
+    expect(analyse(stools, foods).summary.avgWaterOz).toBe(32)
+  })
+
+  it('ignores meals with no water logged', () => {
+    const foods = [food(NOW - HOUR, [], ['lunch']), food(NOW - 2 * HOUR, [], ['snack'], 20)]
+    expect(analyse([stool(NOW)], foods).summary.avgWaterOz).toBe(20)
+  })
+
+  it('reports nothing when water was never logged', () => {
+    expect(analyse([stool(NOW)], [food(NOW - HOUR, [], ['lunch'])]).summary.avgWaterOz).toBeNull()
+  })
+})
+
+describe('scope', () => {
+  it('only ever surfaces food-derived correlations', () => {
+    const stools: StoolEntry[] = []
+    const foods: FoodEntry[] = []
+    for (let d = 0; d < 30; d++) {
+      const base = NOW - (d + 1) * DAY
+      const withDairy = d % 2 === 0
+      foods.push(food(base, withDairy ? ['dairy'] : ['high-fiber']))
+      stools.push(stool(base + 2 * HOUR, withDairy ? { bristol: 7, pain: 8 } : { bristol: 4 }))
+    }
+    const result = analyse(stools, foods)
+    expect(result.triggers.length).toBeGreaterThan(0)
+    // Nothing about sleep, stress, travel or drill weekends can appear.
+    for (const t of [...result.triggers, ...result.protective]) {
+      expect(t.kind === 'tag' || t.kind === 'item').toBe(true)
+      expect(t.key.startsWith('factor:')).toBe(false)
+    }
+  })
+
+  it('derives red flags from stool entries alone', () => {
+    const flags = allFlags([stool(NOW, { flags: ['blood'] }), stool(NOW - DAY, { color: 'black' })], NOW)
+    const ids = flags.map((f) => f.id)
+    expect(ids).toContain('blood')
+    expect(ids).toContain('black')
+    expect(ids).not.toContain('fever')
+    expect(ids).not.toContain('weight-loss')
+    expect(ids).not.toContain('dehydration')
   })
 })

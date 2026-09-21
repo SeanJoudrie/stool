@@ -1,6 +1,11 @@
 /**
  * Red-flag detection.
  *
+ * Everything here is derived from stool entries alone. Fever, unintended
+ * weight loss and volume-depletion signs were dropped along with the daily
+ * check-in: this is a poop journal, and a rule with no honest data behind it
+ * is worse than no rule.
+ *
  * These are the findings that change what should happen next, rather than what
  * should be tracked. The app states what it observed and what that class of
  * finding warrants; it does not name a diagnosis, and it never tells someone
@@ -11,7 +16,7 @@
  * a bathroom. Plain, specific, calm — no alarm words, no hedging into
  * uselessness.
  */
-import type { DailyEntry, StoolEntry } from '../db/schema'
+import type { StoolEntry } from '../db/schema'
 import { DAY, HOUR, formatDay } from './time'
 
 export type FlagSeverity = 'urgent' | 'soon' | 'discuss'
@@ -88,10 +93,9 @@ export function flagsForEntry(entry: StoolEntry): RedFlag[] {
 }
 
 /** Flags that only emerge from looking across the whole log. */
-export function scanLog(stool: StoolEntry[], daily: DailyEntry[], now = Date.now()): RedFlag[] {
+export function scanLog(stool: StoolEntry[], now = Date.now()): RedFlag[] {
   const flags: RedFlag[] = []
   const recent = stool.filter((e) => e.ts >= now - 30 * DAY).sort((a, b) => a.ts - b.ts)
-  const recentDaily = daily.filter((d) => d.id >= new Date(now - 60 * DAY).toISOString().slice(0, 10))
 
   // --- sustained diarrhoea -------------------------------------------------
   // A run of loose events with no formed stool in between, spanning >48 h.
@@ -137,53 +141,6 @@ export function scanLog(stool: StoolEntry[], daily: DailyEntry[], now = Date.now
     })
   }
 
-  // --- fever ---------------------------------------------------------------
-  const feverDay = recentDaily.find((d) => d.feverF !== null && d.feverF >= 101.5)
-  if (feverDay) {
-    flags.push({
-      id: 'fever',
-      severity: 'urgent',
-      title: `You recorded a fever of ${feverDay.feverF}°F`,
-      detail:
-        'A fever above 101.5°F alongside GI symptoms is one of the findings that warrants being seen rather than waited out.',
-      evidence: `Recorded on ${feverDay.id}.`,
-    })
-  }
-
-  // --- volume depletion ----------------------------------------------------
-  const depleted = recentDaily.find((d) => d.dehydrationSigns)
-  if (depleted) {
-    flags.push({
-      id: 'dehydration',
-      severity: 'urgent',
-      title: 'You recorded signs of significant fluid loss',
-      detail:
-        'Dizziness on standing, or not urinating for eight or more hours, means fluid loss has gone past what drinking normally will fix comfortably. This warrants same-day attention.',
-      evidence: `Recorded on ${depleted.id}.`,
-    })
-  }
-
-  // --- unintentional weight loss ------------------------------------------
-  const weights = recentDaily
-    .filter((d) => d.weightLb !== null)
-    .map((d) => ({ key: d.id, lb: d.weightLb as number }))
-    .sort((a, b) => a.key.localeCompare(b.key))
-  if (weights.length >= 2) {
-    const first = weights[0]!
-    const last = weights[weights.length - 1]!
-    const drop = first.lb - last.lb
-    if (drop > 0 && drop / first.lb >= 0.05) {
-      flags.push({
-        id: 'weight-loss',
-        severity: 'soon',
-        title: `Your recorded weight is down ${drop.toFixed(1)} lb`,
-        detail:
-          'Weight loss you did not intend is on every GI red-flag list, because it is one of the findings that most reliably justifies investigation. Bring these numbers with you.',
-        evidence: `${first.lb} lb on ${first.key} → ${last.lb} lb on ${last.key}.`,
-      })
-    }
-  }
-
   // --- recurrence ----------------------------------------------------------
   const poor = recent.filter((e) => e.rating !== null && e.rating <= 3)
   if (poor.length >= 6) {
@@ -200,14 +157,14 @@ export function scanLog(stool: StoolEntry[], daily: DailyEntry[], now = Date.now
   return flags
 }
 
-export function allFlags(stool: StoolEntry[], daily: DailyEntry[], now = Date.now()): RedFlag[] {
+export function allFlags(stool: StoolEntry[], now = Date.now()): RedFlag[] {
   const perEntry = stool
     .filter((e) => e.ts >= now - 30 * DAY)
     .flatMap(flagsForEntry)
   // One card per finding type, keeping the most severe instance.
   const order: Record<FlagSeverity, number> = { urgent: 0, soon: 1, discuss: 2 }
   const byId = new Map<string, RedFlag>()
-  for (const f of [...perEntry, ...scanLog(stool, daily, now)]) {
+  for (const f of [...perEntry, ...scanLog(stool, now)]) {
     const prev = byId.get(f.id)
     if (!prev || order[f.severity] < order[prev.severity]) byId.set(f.id, f)
   }
