@@ -331,6 +331,72 @@ export interface TimelinePoint {
   poor: boolean
 }
 
+/**
+ * A plain-language read on the log that works with stool entries alone.
+ *
+ * Most people will only ever log the bad ones and will never meet the bar for
+ * a food correlation. They still deserve an answer when they open this screen,
+ * so this never depends on meals being logged.
+ */
+export interface Headline {
+  sentence: string
+  /** Rate of poor events in the last 14 days against the 14 before, when both exist. */
+  direction: 'better' | 'worse' | 'steady' | 'unknown'
+  detail: string | null
+}
+
+export function headlineFor(stool: StoolEntry[], now = Date.now()): Headline {
+  const total = stool.length
+  if (total === 0) {
+    return {
+      sentence: 'Nothing logged yet.',
+      direction: 'unknown',
+      detail: 'Log an entry whenever something is worth remembering — good or bad.',
+    }
+  }
+
+  const poor = stool.filter(isPoorEvent).length
+  const days = new Set(stool.map((e) => dateKey(e.ts))).size
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+  // "1 entry over 1 day. 1 of them was rough" is technically right and reads
+  // like a robot, and this is the first sentence a new user ever sees.
+  const sentence =
+    total === 1
+      ? poor === 1
+        ? 'One entry so far, and it was a rough one.'
+        : 'One entry so far. Keep going — a few more and this starts telling you something.'
+      : poor === 0
+        ? `${plural(total, 'entry', 'entries')} over ${plural(days, 'day', 'days')}, and none of them were rough.`
+        : `${plural(total, 'entry', 'entries')} over ${plural(days, 'day', 'days')}. ${poor} of them ${poor === 1 ? 'was' : 'were'} rough or worse.`
+
+  const recentWindow = stool.filter((e) => e.ts >= now - 14 * 86_400_000)
+  const priorWindow = stool.filter(
+    (e) => e.ts >= now - 28 * 86_400_000 && e.ts < now - 14 * 86_400_000,
+  )
+
+  // Both halves need enough events for a comparison to mean anything.
+  if (recentWindow.length < 4 || priorWindow.length < 4) {
+    return { sentence, direction: 'unknown', detail: null }
+  }
+
+  const recentRate = recentWindow.filter(isPoorEvent).length / recentWindow.length
+  const priorRate = priorWindow.filter(isPoorEvent).length / priorWindow.length
+  const delta = recentRate - priorRate
+
+  if (Math.abs(delta) < 0.15) {
+    return { sentence, direction: 'steady', detail: 'The last two weeks look much like the two before.' }
+  }
+  return {
+    sentence,
+    direction: delta < 0 ? 'better' : 'worse',
+    detail:
+      delta < 0
+        ? `The last two weeks have gone better than the two before — ${Math.round(recentRate * 100)}% rough, down from ${Math.round(priorRate * 100)}%.`
+        : `The last two weeks have been worse than the two before — ${Math.round(recentRate * 100)}% rough, up from ${Math.round(priorRate * 100)}%.`,
+  }
+}
+
 export interface AnalysisResult {
   /** False when there is not yet enough logged to say anything at all. */
   ready: boolean

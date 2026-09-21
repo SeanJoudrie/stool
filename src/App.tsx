@@ -12,17 +12,15 @@ import { LogFood } from './screens/LogFood'
 import { LogDaily } from './screens/LogDaily'
 import { Voice } from './screens/Voice'
 import { Alert } from './components/ui'
-import {
-  IconInsights,
-  IconReport,
-  IconSettings,
-  IconToday,
-} from './components/icons'
+import { IconHome, IconInsights, IconSettings, IconToday } from './components/icons'
 
+// Four tabs, and Report deliberately is not one of them — it is reachable from
+// Patterns and from Today, and most people will never need it. The bar is for
+// the places you go repeatedly.
 const TABS: { route: Route; label: string; Icon: typeof IconToday }[] = [
-  { route: { name: 'today' }, label: 'Today', Icon: IconToday },
-  { route: { name: 'insights' }, label: 'Insights', Icon: IconInsights },
-  { route: { name: 'report' }, label: 'Report', Icon: IconReport },
+  { route: { name: 'today' }, label: 'Home', Icon: IconHome },
+  { route: { name: 'history' }, label: 'History', Icon: IconToday },
+  { route: { name: 'insights' }, label: 'Patterns', Icon: IconInsights },
   { route: { name: 'settings' }, label: 'Settings', Icon: IconSettings },
 ]
 

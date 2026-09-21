@@ -11,6 +11,9 @@ doctor can act on. A dated log with form, timing, pain and dietary exposure is.
 **All data stays on the device.** There is no account, no server, and the app
 makes no network requests at all after it loads.
 
+**Live:** https://seanjoudrie.github.io/stool/ — open it on your phone and use
+Share → Add to Home Screen. After that it runs offline like any other app.
+
 ---
 
 ## Running it
@@ -31,12 +34,23 @@ sheet and then runs offline. That is the intended way to use it — see
 
 ## What it does
 
+**Four things on the home screen**, in the order they get used: log a stool,
+log a meal, view history, analyse for patterns. Nothing else competes with
+them.
+
 **Logging, in under twenty seconds.** The entry form is the whole ballgame: if
 logging an event in a bathroom takes longer than that, it stops happening and
-the record is worthless. So the timestamp is automatic, the Bristol scale is a
-visual picker rather than a number field, every clinical value is one tap, the
-overall rating pre-fills from what you entered, and nothing is required. A
-partial entry saves fine and beats no entry.
+the record is worthless. The form is ordered by what people actually fill in —
+speak it, rate it, pick the shape, pick the colour, say whether it hurt. That
+is the whole visible form. Urgency, observations, photographs, notes and the
+timestamp all live behind one **Add more detail** tap, because a form that asks
+twelve questions is a form that gets abandoned. Nothing is required: a rating
+on its own is a complete, useful entry.
+
+**History is a calendar.** Every logged day carries a coloured circle with its
+rating inside it — red through green, worst event of the day, with a count
+underneath if there was more than one. A bad fortnight is visible as a bad
+fortnight without reading anything.
 
 **Or just say it.** "Had a really bad one this morning, basically water,
 cramping like an eight" parses into Bristol type 7, pain 8/10, timed to 8 a.m.
@@ -53,6 +67,9 @@ twelve-to-twenty-four hour foodborne or inflammatory one. Items are auto-tagged
 (dairy, high-fat, cured-meat, alcohol…) and the tags are editable.
 
 **Correlation, with the brakes on.** See [the analysis](#the-analysis) below.
+The patterns screen opens with one plain sentence that works from stool entries
+alone, because most people will only ever log the bad ones and should never be
+told they are using it wrong.
 
 **Red flags.** Blood, black or tarry stool, prolonged diarrhoea, nocturnal
 diarrhoea, fever above 101.5°F, volume-depletion signs and unintended weight
@@ -140,6 +157,19 @@ trivial rather than a query-planning exercise.
 Dependencies are React, Vite and `vite-plugin-pwa`. Routing, charts, state and
 the icon set are all in-repo; see [docs/DESIGN.md](docs/DESIGN.md) for why the
 charts are hand-rolled and how the palette was validated.
+
+## Deploying
+
+`.github/workflows/deploy.yml` typechecks, tests, builds and publishes to
+GitHub Pages on every push to `main`. It also runs from `claude/**` branches so
+the app is reachable while the first pull request is still open.
+
+GitHub Pages serves a project site from `/<repo>/`, so the workflow sets
+`APP_BASE=/stool/` for the build. Locally the base stays relative, which keeps
+`npm run preview` and a plain file server working from the root.
+
+HTTPS is not optional: a service worker will not register over plain HTTP, so
+without it there is no offline install and no microphone.
 
 ### Why a PWA
 

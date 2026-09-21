@@ -3,10 +3,15 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // The app is deployed as a static bundle and must run with no network at all:
-// everything (data, photos, analysis) stays on the device. Base is relative so
-// it works from a subpath, a file server, or a home-screen install.
+// everything (data, photos, analysis) stays on the device.
+//
+// GitHub Pages serves a project site from /<repo>/, so the deploy workflow sets
+// APP_BASE. Locally it stays relative, which keeps `npm run preview`, a plain
+// file server and a home-screen install all working from the root.
+const base = process.env.APP_BASE ?? './'
+
 export default defineConfig({
-  base: './',
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -22,8 +27,8 @@ export default defineConfig({
         short_name: 'Stool',
         description:
           'A clinical stool and food journal for tracking GI symptoms, spotting dietary triggers, and preparing for a gastroenterology appointment.',
-        theme_color: '#0f2733',
-        background_color: '#0b1016',
+        theme_color: '#1f5c39',
+        background_color: '#0c1410',
         display: 'standalone',
         orientation: 'portrait',
         start_url: './',

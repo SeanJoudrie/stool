@@ -204,3 +204,11 @@ export const IconStethoscope = (p: IconProps) => (
     <circle cx="19.5" cy="15.5" r="2.5" />
   </Icon>
 )
+
+export const IconHome = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 10.5 12 3.5l8.5 7" />
+    <path d="M5.5 9.2V19a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V9.2" />
+    <path d="M9.75 20.5v-5.2a1 1 0 0 1 1-1h2.5a1 1 0 0 1 1 1v5.2" />
+  </Icon>
+)

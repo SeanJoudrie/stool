@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { analyse, deriveRating, isPoorEvent, THRESHOLDS } from '../src/lib/analysis'
+import { analyse, deriveRating, headlineFor, isPoorEvent, THRESHOLDS } from '../src/lib/analysis'
+import { ratingTier } from '../src/components/RatingDot'
 import { hydrationPlan } from '../src/lib/hydration'
 import { allFlags } from '../src/lib/redflags'
 import type { DailyEntry, FoodEntry, StoolEntry } from '../src/db/schema'
@@ -200,5 +201,64 @@ describe('ubiquity guard', () => {
     }
     const result = analyse(stools, foods, [])
     expect(result.triggers.find((t) => t.key === 'tag:dairy')).toBeDefined()
+  })
+})
+
+describe('headline', () => {
+  it('speaks plainly with no food logged at all', () => {
+    const events = [
+      stool(NOW - DAY, { bristol: 7, pain: 8 }),
+      stool(NOW - 2 * DAY, { bristol: 4 }),
+      stool(NOW - 3 * DAY, { bristol: 4 }),
+    ]
+    const h = headlineFor(events, NOW)
+    expect(h.sentence).toContain('3 entries')
+    expect(h.sentence).toContain('1 of them was rough')
+  })
+
+  it('handles an empty log without scolding', () => {
+    expect(headlineFor([], NOW).sentence).toBe('Nothing logged yet.')
+  })
+
+  it('says so when nothing has been rough', () => {
+    const events = Array.from({ length: 4 }, (_, i) => stool(NOW - i * DAY, { bristol: 4 }))
+    expect(headlineFor(events, NOW).sentence).toContain('none of them were rough')
+  })
+
+  it('compares the last fortnight against the one before', () => {
+    const recent = Array.from({ length: 6 }, (_, i) => stool(NOW - i * DAY, { bristol: 4 }))
+    const prior = Array.from({ length: 6 }, (_, i) => stool(NOW - (16 + i) * DAY, { bristol: 7, pain: 8 }))
+    const h = headlineFor([...recent, ...prior], NOW)
+    expect(h.direction).toBe('better')
+    expect(h.detail).toContain('down from')
+  })
+
+  it('withholds a trend when either half is too thin', () => {
+    const events = [stool(NOW - DAY, { bristol: 7 }), stool(NOW - 20 * DAY, { bristol: 4 })]
+    expect(headlineFor(events, NOW).direction).toBe('unknown')
+  })
+})
+
+describe('rating tiers', () => {
+  it('maps ratings onto the four reserved steps', () => {
+    expect(ratingTier(1)).toBe('bad')
+    expect(ratingTier(3)).toBe('bad')
+    expect(ratingTier(4)).toBe('poor')
+    expect(ratingTier(5)).toBe('poor')
+    expect(ratingTier(6)).toBe('ok')
+    expect(ratingTier(7)).toBe('ok')
+    expect(ratingTier(8)).toBe('good')
+    expect(ratingTier(10)).toBe('good')
+    expect(ratingTier(null)).toBe('none')
+  })
+})
+
+describe('headline copy in the singular', () => {
+  it('does not say "1 of them was" about a single entry', () => {
+    const one = headlineFor([stool(NOW, { bristol: 7, pain: 8 })], NOW)
+    expect(one.sentence).toBe('One entry so far, and it was a rough one.')
+    const fine = headlineFor([stool(NOW, { bristol: 4 })], NOW)
+    expect(fine.sentence).toContain('One entry so far')
+    expect(fine.sentence).not.toContain('1 of them')
   })
 })

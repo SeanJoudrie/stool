@@ -11,9 +11,9 @@ import { fileURLToPath } from 'node:url'
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public')
 
-const NAVY = [0x0f, 0x27, 0x33]
+const GREEN = [0x1f, 0x5c, 0x39]
 const WHITE = [0xff, 0xff, 0xff]
-const TEAL = [0x4f, 0xc3, 0xcb]
+const MINT = [0x7b, 0xd9, 0xa0]
 
 const SS = 4 // supersample factor
 
@@ -55,7 +55,7 @@ function drawIcon(size, { maskable = false } = {}) {
 
   // Column heights read low → high: the eye resolves a rising chart even at 48px.
   const heights = [0.42, 1.0, 0.68]
-  const colors = [WHITE, TEAL, WHITE]
+  const colors = [WHITE, MINT, WHITE]
 
   const bars = heights.map((f, i) => {
     const bodyH = (markH - baseH - markH * 0.08) * f
@@ -74,7 +74,7 @@ function drawIcon(size, { maskable = false } = {}) {
       const cx = px + 0.5
       const cy = py + 0.5
       if (maskable || inRoundRect(cx, cy, 0, 0, w, w, bgRadius)) {
-        color = NAVY
+        color = GREEN
         for (const b of bars) {
           if (inRoundRect(cx, cy, b.x, b.y, b.w, b.h, barR)) color = b.color
         }
@@ -180,10 +180,10 @@ function encodeIco(png, size) {
 }
 
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Stool">
-  <rect width="512" height="512" rx="114.5" fill="#0f2733"/>
+  <rect width="512" height="512" rx="114.5" fill="#1f5c39"/>
   <g>
     <rect x="71.7" y="252.4" width="98.3" height="111.6" rx="27.5" fill="#ffffff"/>
-    <rect x="206.9" y="120.0" width="98.3" height="244.0" rx="27.5" fill="#4fc3cb"/>
+    <rect x="206.9" y="120.0" width="98.3" height="244.0" rx="27.5" fill="#7bd9a0"/>
     <rect x="342.1" y="197.5" width="98.3" height="166.5" rx="27.5" fill="#ffffff"/>
     <rect x="71.7" y="384.0" width="368.6" height="43.9" rx="21.9" fill="#ffffff"/>
   </g>

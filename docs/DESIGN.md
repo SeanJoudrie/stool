@@ -4,10 +4,14 @@
 
 The brief was explicit and correct: there is nothing funny about this. People
 with real GI conditions are the users, and the output is meant to be handed to
-a gastroenterologist. So the app reads as a clinical record system — cool
-neutral surfaces, hairline rules, one restrained teal accent, tabular figures,
-no illustration and no joke anywhere, including in the icon. The word
-throughout the interface is "stool".
+a gastroenterologist. So the app reads as a record system — calm surfaces,
+hairline rules, one restrained green accent, tabular figures, no illustration
+and no joke anywhere, including in the icon. The word throughout the interface
+is "stool": everybody knows it, and it is the tasteful one.
+
+It has to work for someone elderly, mid-flare, one-handed, in a hurry. That
+rules out density. Every screen is built on the assumption that the user wants
+to leave it as fast as possible.
 
 That register is also a usability decision. Someone showing this screen to a
 doctor, or opening it on a bus, should not have to feel self-conscious about
@@ -30,10 +34,16 @@ doubles as a button, and a status colour never doubles as a series.
 
 | Role | Light | Dark |
 |---|---|---|
-| Page plane | `#eef2f5` | `#0b1016` |
-| Surface | `#ffffff` | `#161d24` |
-| Primary ink | `#0f1f2a` | `#eef4f8` |
-| Accent | `#0e7c86` | `#3fb5bd` |
+| Page plane | `#eef4ee` | `#0c1410` |
+| Surface | `#ffffff` | `#14201a` |
+| Primary ink | `#14261a` | `#e8f2ea` |
+| Accent | `#2e7d4f` | `#5fc98a` |
+| Accent edge | `#1f5c39` | `#7bd9a0` |
+| Accent wash | `#dcefe1` | `#16341f` |
+
+Secondary surfaces are a light green wash with a darker green edge; the one
+primary action per screen is a solid green fill. White on `#2e7d4f` measures
+5.05:1, and the dark-mode ink on `#5fc98a` measures 7.87:1.
 
 Dark mode is a selected set, not an inverted one, and is declared under both
 `prefers-color-scheme` and an explicit `[data-theme]` scope so a user's choice
@@ -70,6 +80,44 @@ enough that two steps per arm do not fit. Collapsing to three clinical bands —
 with the x-axis position carrying the exact type — passed every gate and reads
 better besides.
 
+## The rating scale
+
+Ratings are shown as a coloured circle with **the number inside it**, at every
+size, everywhere. That is not decoration. Red-to-green is the one scale
+everybody reads instantly, and it is also the one that fails hardest for the
+roughly one man in twelve with red-green colour blindness — so the digit
+carries the value and the colour is a second channel that makes a bad month
+visible from across the room.
+
+Four reserved status steps rather than a generated ten-colour ramp:
+
+| Rating | Meaning | Fill | Number |
+|---|---|---|---|
+| 1–3 | bad | `#d03b3b` | white |
+| 4–5 | rough | `#ec835a` | `#3a1a0c` |
+| 6–7 | okay | `#fab219` | `#3d2c00` |
+| 8–10 | good | `#0ca30c` | `#05260b` |
+
+The ink is picked per step, not globally: white clears 4.5:1 on the red but
+measures only 2.64:1 on the amber and 3.35:1 on the green, so those two take
+dark ink instead. A legend accompanies the scale wherever it is scanned in
+bulk.
+
+The brand green and the "good" green are deliberately different steps, so app
+chrome never reads as a rating.
+
+## Ordering, and what goes behind a disclosure
+
+The first build put every field on one screen in clinical order. That is the
+wrong order. Nobody takes their temperature on an ordinary day, and a
+temperature field sitting above "what colour was it" is a field that costs
+every user something and serves almost none of them.
+
+So both entry forms now show only what most people will actually answer, and
+everything else sits behind one **Add more detail** tap. The disclosure opens
+automatically when an entry already has data in it, so editing never hides
+what you previously wrote.
+
 ## Charts
 
 Hand-rolled SVG. There are three chart forms in the whole app, and owning the
@@ -93,6 +141,19 @@ through loose at the top so the stack mirrors the scale. It answers the
 question people actually bring to that chart — "how have the last few weeks
 gone" — and stays legible at any density the app can realistically produce.
 Days with nothing logged render as gaps rather than being closed up.
+
+### Two more bugs worth recording
+
+The calendar cell was `aspect-ratio: 1` holding a day number, a 26px rating dot
+and an `×N` count. The count overflowed the cell and collided with the day
+number in the row beneath. Square cells were the assumption; the content needed
+58px.
+
+Separately, `.list__title` and `.list__meta` were sibling `<span>`s inside a
+non-flex parent, so every row in every list rendered as
+"Type 6 · MushyMushy, ragged edgespain 5/10" — the title running straight into
+its own detail text. Both were invisible in code review and obvious in a
+screenshot.
 
 ### A bug worth recording
 

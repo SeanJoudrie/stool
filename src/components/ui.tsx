@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { IconAlert, IconBack, IconCheck, IconCheckCircle, IconInfo } from './icons'
 import { goBack } from '../router'
+import { ratingTier } from './RatingDot'
 
 // ------------------------------------------------------------------ shell ---
 
@@ -127,6 +128,8 @@ export function Scale({
   lowLabel,
   highLabel,
   hint,
+  /** Colours the chosen step by rating tier, tying the form to the calendar. */
+  colourByRating,
 }: {
   label: string
   value: number | null
@@ -134,6 +137,7 @@ export function Scale({
   lowLabel: string
   highLabel: string
   hint?: string
+  colourByRating?: boolean
 }) {
   return (
     <fieldset className="field" style={{ border: 0, margin: 0, padding: 0 }}>
@@ -147,6 +151,7 @@ export function Scale({
             key={n}
             type="button"
             className="scale__step"
+            data-tier={colourByRating && value === n ? ratingTier(n) : undefined}
             aria-pressed={value === n}
             aria-label={`${label}: ${n} out of 10`}
             onClick={() => onChange(value === n ? null : n)}

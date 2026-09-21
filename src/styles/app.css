@@ -588,8 +588,20 @@ button {
 }
 
 .list__body { flex: 1; min-width: 0; }
-.list__title { font-weight: 600; font-size: var(--fs-body); }
-.list__meta { font-size: var(--fs-sm); color: var(--ink-2); }
+
+.list__title {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-body);
+  line-height: 1.3;
+}
+
+.list__meta {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+  line-height: 1.35;
+}
 
 .list__rule {
   flex: none;
@@ -1163,4 +1175,323 @@ button {
   .report { border: 0; padding: 0; }
   .report__section { page-break-inside: auto; }
   .table th { color: #000; }
+}
+
+/* ------------------------------------------------------------ home page --- */
+
+/* Large enough to hit without looking, which is the actual use case. */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  width: 100%;
+  min-height: 104px;
+  padding: var(--s5);
+  border-radius: var(--r-xl);
+  border: 2px solid var(--accent-edge);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+  text-align: left;
+  box-shadow: var(--shadow-md);
+}
+
+.hero__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.hero__icon svg { width: 30px; height: 30px; stroke-width: 2.25; }
+.hero__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.hero__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.hero__hint {
+  font-size: var(--fs-sm);
+  opacity: 0.85;
+}
+
+.home-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s3);
+}
+
+/* Light green fill, darker green edge. */
+.tile,
+.wide-tile,
+.quiet-row {
+  border: 1.5px solid var(--line-strong);
+  background: var(--accent-wash);
+  color: var(--ink);
+  border-radius: var(--r-lg);
+  text-align: left;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-height: 96px;
+  padding: var(--s4);
+  border-color: var(--accent);
+}
+
+.tile svg,
+.wide-tile > svg,
+.quiet-row > svg {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-ink);
+  flex: none;
+}
+
+.tile__title {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.tile__hint {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+
+.wide-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--s4);
+  border-color: var(--accent);
+}
+
+.wide-tile__text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wide-tile__chevron { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
+
+/* Deliberately the quietest thing on the page. */
+.quiet-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--s3) var(--s4);
+  background: none;
+  border-color: var(--line);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+.quiet-row > span { flex: 1; }
+
+/* ----------------------------------------------------------- rating dot --- */
+
+.rating-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 50%;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: var(--rate-none);
+  color: var(--rate-none-ink);
+}
+
+.rating-dot--sm { width: 26px; height: 26px; font-size: 0.8125rem; }
+.rating-dot--md { width: 34px; height: 34px; font-size: 0.9375rem; }
+.rating-dot--lg { width: 46px; height: 46px; font-size: 1.25rem; }
+
+.rating-dot[data-tier='bad']  { background: var(--rate-bad);  color: var(--rate-bad-ink); }
+.rating-dot[data-tier='poor'] { background: var(--rate-poor); color: var(--rate-poor-ink); }
+.rating-dot[data-tier='ok']   { background: var(--rate-ok);   color: var(--rate-ok-ink); }
+.rating-dot[data-tier='good'] { background: var(--rate-good); color: var(--rate-good-ink); }
+
+.swatch[data-tier] { width: 12px; height: 12px; border-radius: 50%; }
+
+/* ------------------------------------------------------------- calendar --- */
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s1);
+}
+
+.cal__dow {
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-3);
+  padding-bottom: var(--s1);
+}
+
+.cal__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  padding: 3px 2px;
+  min-height: 58px;
+}
+
+.cal__cell[data-today='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.cal__cell[disabled] { opacity: 0.25; cursor: default; }
+
+.cal__num {
+  font-size: 0.625rem;
+  line-height: 1.1;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal__empty {
+  width: 8px;
+  height: 8px;
+  margin-top: 9px;
+  border-radius: 50%;
+  background: var(--rate-none);
+}
+
+/* More than one event that day: a small count badge on the dot. */
+.cal__more {
+  font-size: 0.5625rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.cal-head__title {
+  font-size: var(--fs-h3);
+  font-weight: 650;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--tap);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.cal-nav[disabled] { opacity: 0.35; }
+.cal-nav svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------------- more-detail --- */
+
+/* Everything most people will never fill in lives behind one of these. */
+.more {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.more > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  cursor: pointer;
+  list-style: none;
+  padding: var(--s4);
+  min-height: var(--tap);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+
+.more > summary::-webkit-details-marker { display: none; }
+
+.more > summary::after {
+  content: '';
+  margin-left: auto;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.15s ease;
+}
+
+.more[open] > summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.more[open] > summary { border-bottom: 1px solid var(--line); }
+.more__body { padding: var(--s4); }
+
+.more__hint {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+/* --------------------------------------------------------- voice strip --- */
+
+.voice-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--accent);
+  border-radius: var(--r-lg);
+  background: var(--accent-wash);
+  color: var(--ink);
+  text-align: left;
+}
+
+.voice-strip svg { width: 26px; height: 26px; color: var(--accent-ink); flex: none; }
+.voice-strip__text { display: flex; flex-direction: column; gap: 1px; }
+.voice-strip__title { font-weight: 650; font-size: 1rem; }
+.voice-strip__hint { font-size: var(--fs-xs); color: var(--ink-2); }
+
+/* A chosen rating wears its tier colour, so the number the calendar shows and
+   the number typed here are visibly the same scale. */
+.scale__step[data-tier='bad']  { background: var(--rate-bad);  color: var(--rate-bad-ink); }
+.scale__step[data-tier='poor'] { background: var(--rate-poor); color: var(--rate-poor-ink); }
+.scale__step[data-tier='ok']   { background: var(--rate-ok);   color: var(--rate-ok-ink); }
+.scale__step[data-tier='good'] { background: var(--rate-good); color: var(--rate-good-ink); }
+
+.rating-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.headline {
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }

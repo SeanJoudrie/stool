@@ -1,0 +1,68 @@
+# Publishes the app to GitHub Pages.
+#
+# The app is a static bundle with no backend, so this is just "build and copy".
+# HTTPS is the part that matters: a service worker will not register over plain
+# HTTP, and neither the offline install nor the microphone works without it.
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      # So the app is reachable while the first pull request is still open.
+      - 'claude/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; always finish the one in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      - uses: actions/configure-pages@v5
+        id: pages
+        with:
+          # Turns Pages on the first time this runs, so nobody has to go and
+          # click it in repository settings.
+          enablement: true
+
+      - name: Build
+        env:
+          # A project site lives at /<repo>/, so assets need that prefix.
+          APP_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
