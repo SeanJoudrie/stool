@@ -29,7 +29,7 @@ const RANGES = [
 type RangeId = (typeof RANGES)[number]['id']
 
 export function Report() {
-  const { stool, food, daily, settings } = useStore()
+  const { stool, food } = useStore()
   const [range, setRange] = useState<RangeId>('30')
   const now = Date.now()
 
@@ -39,23 +39,13 @@ export function Report() {
     () => ({
       stool: stool.filter((e) => e.ts >= from).sort((a, b) => b.ts - a.ts),
       food: food.filter((e) => e.ts >= from),
-      daily: daily.filter((d) => new Date(d.id).getTime() >= from - DAY),
     }),
-    [stool, food, daily, from],
+    [stool, food, from],
   )
 
-  const result = useMemo(
-    () => analyse(scoped.stool, scoped.food, scoped.daily, settings.waterTargetOz),
-    [scoped, settings.waterTargetOz],
-  )
-  const flags = useMemo(() => allFlags(scoped.stool, scoped.daily, now), [scoped, now])
+  const result = useMemo(() => analyse(scoped.stool, scoped.food), [scoped])
+  const flags = useMemo(() => allFlags(scoped.stool, now), [scoped, now])
   const { summary } = result
-
-  const meds = useMemo(() => {
-    const set = new Set<string>()
-    for (const d of scoped.daily) for (const m of d.meds) set.add(m)
-    return [...set]
-  }, [scoped.daily])
 
   const notable = scoped.stool
     .filter((e) => {
@@ -143,12 +133,8 @@ export function Report() {
                     </td>
                   </tr>
                   <tr>
-                    <td>Mean recorded water intake</td>
+                    <td>Mean water logged with meals</td>
                     <td>{summary.avgWaterOz !== null ? `${Math.round(summary.avgWaterOz)} oz/day` : '—'}</td>
-                  </tr>
-                  <tr>
-                    <td>Mean recorded sleep</td>
-                    <td>{summary.avgSleepHours !== null ? `${summary.avgSleepHours.toFixed(1)} h` : '—'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -230,12 +216,6 @@ export function Report() {
                     ))}
                   </tbody>
                 </table>
-              </Section>
-            )}
-
-            {meds.length > 0 && (
-              <Section title="Medications and supplements recorded">
-                <p className="small">{meds.join(', ')}</p>
               </Section>
             )}
 

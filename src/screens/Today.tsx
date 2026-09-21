@@ -15,30 +15,22 @@ import { useStore } from '../store'
 import { allFlags } from '../lib/redflags'
 import { hydrationPlan, ORS_RECIPE } from '../lib/hydration'
 import { effectiveRating } from '../lib/analysis'
-import { dateKey, formatDayLong, formatTime, startOfDay } from '../lib/time'
+import { formatDayLong, formatTime, startOfDay } from '../lib/time'
 import { navigate } from '../router'
 import { Alert, AppBar, Card } from '../components/ui'
 import { RatingDot } from '../components/RatingDot'
-import {
-  IconChevron,
-  IconDroplet,
-  IconFood,
-  IconInsights,
-  IconPlus,
-  IconToday,
-} from '../components/icons'
+import { IconChevron, IconFood, IconInsights, IconPlus, IconToday } from '../components/icons'
 
 type TimelineItem =
   | { kind: 'stool'; entry: StoolEntry }
   | { kind: 'food'; entry: FoodEntry }
 
 export function Today() {
-  const { stool, food, daily, settings } = useStore()
+  const { stool, food, settings } = useStore()
   const now = Date.now()
-  const todayKey = dateKey(now)
   const dayStart = startOfDay(now)
 
-  const flags = useMemo(() => allFlags(stool, daily, now), [stool, daily, now])
+  const flags = useMemo(() => allFlags(stool, now), [stool, now])
   const hydration = useMemo(
     () => hydrationPlan(stool, settings.bodyWeightLb, now),
     [stool, settings.bodyWeightLb, now],
@@ -50,7 +42,6 @@ export function Today() {
     return [...s, ...f].sort((a, b) => b.entry.ts - a.entry.ts)
   }, [stool, food, dayStart])
 
-  const todayCheckIn = daily.find((d) => d.id === todayKey)
   const urgent = flags.filter((f) => f.severity === 'urgent')
 
   return (
@@ -140,15 +131,6 @@ export function Today() {
             </section>
           )}
 
-          {/* Quiet, because most people will never touch it. */}
-          <button className="quiet-row" onClick={() => navigate({ name: 'log-daily' })}>
-            <IconDroplet />
-            <span>
-              {todayCheckIn ? 'Update today’s check-in' : 'Add water, sleep and weight for today'}
-            </span>
-            <IconChevron className="wide-tile__chevron" />
-          </button>
-
           {flags.filter((f) => f.severity !== 'urgent').length > 0 && (
             <Card title="Worth mentioning to a doctor">
               <div className="stack stack--tight">
@@ -203,15 +185,22 @@ function bristolBandLabel(type: number): string {
 }
 
 function FoodRow({ entry }: { entry: FoodEntry }) {
+  // A water-only entry should read as water, not as an empty meal.
+  const waterOnly = entry.items.length === 0 && entry.waterOz !== null
+  const water = entry.waterOz !== null ? `${entry.waterOz} oz water` : null
+  const detail = [entry.items.join(', ') || null, waterOnly ? null : water]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <button className="list__item" onClick={() => navigate({ name: 'log-food', id: entry.id })}>
       <span className="list__time">{formatTime(entry.ts)}</span>
       <span className="list__rule" style={{ background: 'var(--line-strong)' }} />
       <span className="list__body">
         <span className="list__title" style={{ textTransform: 'capitalize' }}>
-          {entry.mealKind}
+          {waterOnly ? 'Water' : entry.mealKind}
         </span>
-        <span className="list__meta">{entry.items.join(', ') || 'No items'}</span>
+        <span className="list__meta">{waterOnly ? water : detail || 'No items'}</span>
       </span>
     </button>
   )

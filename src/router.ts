@@ -13,7 +13,6 @@ export type Route =
   | { name: 'history' }
   | { name: 'log-stool'; id?: string }
   | { name: 'log-food'; id?: string }
-  | { name: 'log-daily'; date?: string }
   | { name: 'voice' }
 
 export const DEFAULT_ROUTE: Route = { name: 'today' }
@@ -23,7 +22,6 @@ export function parseHash(hash: string): Route {
   const [path, query] = clean.split('?')
   const params = new URLSearchParams(query ?? '')
   const id = params.get('id') ?? undefined
-  const date = params.get('date') ?? undefined
 
   switch (path) {
     case '':
@@ -41,8 +39,6 @@ export function parseHash(hash: string): Route {
       return id ? { name: 'log-stool', id } : { name: 'log-stool' }
     case 'log/food':
       return id ? { name: 'log-food', id } : { name: 'log-food' }
-    case 'log/daily':
-      return date ? { name: 'log-daily', date } : { name: 'log-daily' }
     case 'voice':
       return { name: 'voice' }
     default:
@@ -58,8 +54,6 @@ export function href(route: Route): string {
       return route.id ? `#/log/stool?id=${encodeURIComponent(route.id)}` : '#/log/stool'
     case 'log-food':
       return route.id ? `#/log/food?id=${encodeURIComponent(route.id)}` : '#/log/food'
-    case 'log-daily':
-      return route.date ? `#/log/daily?date=${encodeURIComponent(route.date)}` : '#/log/daily'
     default:
       return `#/${route.name}`
   }

@@ -12,7 +12,7 @@
  * count sits underneath so a heavy day is still visible as a heavy day.
  */
 import { useMemo, useState } from 'react'
-import { BRISTOL, type DailyEntry, type FoodEntry, type StoolEntry } from '../db/schema'
+import { BRISTOL, type FoodEntry, type StoolEntry } from '../db/schema'
 import { useStore } from '../store'
 import { effectiveRating } from '../lib/analysis'
 import { dateKey, dateKeyToTs, formatDayLong, formatTime } from '../lib/time'
@@ -32,7 +32,7 @@ interface DaySummary {
 type View = 'calendar' | 'list'
 
 export function History() {
-  const { stool, food, daily } = useStore()
+  const { stool, food } = useStore()
   const today = new Date()
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selected, setSelected] = useState<string>(() => dateKey(Date.now()))
@@ -82,7 +82,6 @@ export function History() {
 
   const selectedStool = stool.filter((e) => dateKey(e.ts) === selected).sort((a, b) => a.ts - b.ts)
   const selectedFood = food.filter((e) => dateKey(e.ts) === selected).sort((a, b) => a.ts - b.ts)
-  const selectedDaily = daily.find((d) => d.id === selected)
 
   return (
     <>
@@ -156,7 +155,6 @@ export function History() {
                 }
               >
                 <div className="stack stack--tight">
-                  {selectedDaily && <DailyLine entry={selectedDaily} />}
                   <div className="btn-row">
                     <button
                       className="btn btn--secondary"
@@ -242,18 +240,6 @@ function DayCell({
   )
 }
 
-function DailyLine({ entry }: { entry: DailyEntry }) {
-  const bits = [
-    entry.waterOz !== null ? `${entry.waterOz} oz water` : null,
-    entry.sleepHours !== null ? `${entry.sleepHours} h sleep` : null,
-    entry.bloating && entry.bloating !== 'none' ? `${entry.bloating} bloating` : null,
-    entry.weightLb !== null ? `${entry.weightLb} lb` : null,
-    entry.travel ? 'travel' : null,
-  ].filter(Boolean)
-  if (bits.length === 0) return null
-  return <p className="small muted">{bits.join(' · ')}</p>
-}
-
 function StoolRow({ entry }: { entry: StoolEntry }) {
   const rating = effectiveRating(entry)
   return (
@@ -279,21 +265,27 @@ function StoolRow({ entry }: { entry: StoolEntry }) {
 }
 
 function FoodRow({ entry }: { entry: FoodEntry }) {
+  // A water-only entry should read as water, not as an empty meal.
+  const waterOnly = entry.items.length === 0 && entry.waterOz !== null
+  const water = entry.waterOz !== null ? `${entry.waterOz} oz water` : null
+  const detail = [entry.items.join(', ') || null, waterOnly ? null : water]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <button className="list__item" onClick={() => navigate({ name: 'log-food', id: entry.id })}>
       <span className="list__time">{formatTime(entry.ts)}</span>
       <span className="list__rule" style={{ background: 'var(--line-strong)' }} />
       <span className="list__body">
         <span className="list__title" style={{ textTransform: 'capitalize' }}>
-          {entry.mealKind}
+          {waterOnly ? 'Water' : entry.mealKind}
         </span>
-        <span className="list__meta">{entry.items.join(', ')}</span>
+        <span className="list__meta">{waterOnly ? water : detail || 'No items'}</span>
       </span>
     </button>
   )
 }
 
-/** The plain reverse-chronological view, for when you want to read rather than scan. */
 function ListView({ stool, food }: { stool: StoolEntry[]; food: FoodEntry[] }) {
   const days = useMemo(() => {
     type Row = { kind: 'stool'; ts: number; entry: StoolEntry } | { kind: 'food'; ts: number; entry: FoodEntry }

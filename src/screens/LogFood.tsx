@@ -6,6 +6,10 @@
  * exists to answer: what went in, and when. Adding them would make the entry
  * slow enough that it stops happening, and an unlogged meal breaks every
  * correlation downstream.
+ *
+ * Water lives here too. It is the one drink that reliably changes stool, so it
+ * earns a place in the log — but not a screen, not a target and not a streak.
+ * Two buttons on the meal you were already logging.
  */
 import { useMemo, useState } from 'react'
 import { FOOD_TAGS, type FoodEntry, type FoodTag, type MealKind } from '../db/schema'
@@ -14,7 +18,7 @@ import { blankFood, useStore } from '../store'
 import { fromLocalInput, relativeTime, toLocalInput } from '../lib/time'
 import { goBack, navigate } from '../router'
 import { AppBar, Card, Field, Segmented } from '../components/ui'
-import { IconClock, IconClose, IconPlus, IconTrash } from '../components/icons'
+import { IconClock, IconClose, IconDroplet, IconPlus, IconTrash } from '../components/icons'
 
 const MEAL_KINDS: { id: MealKind; label: string }[] = [
   { id: 'meal', label: 'Meal' },
@@ -83,8 +87,9 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
   async function handleSave() {
     const pending = input.trim()
     const items = pending ? [...entry.items, ...splitItems(pending)] : entry.items
-    if (items.length === 0) {
-      toast('Add at least one item first')
+    // Water on its own is a perfectly good entry.
+    if (items.length === 0 && !entry.waterOz) {
+      toast('Add something first')
       return
     }
     setSaving(true)
@@ -215,6 +220,40 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
                   ))}
                 </div>
               </div>
+            </div>
+          </Card>
+
+          <Card title="Water" subtitle="Optional. Only here because it changes things.">
+            <div className="stack stack--tight">
+              <div className="btn-row">
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--lg"
+                  onClick={() => patch({ waterOz: (entry.waterOz ?? 0) + 8 })}
+                >
+                  <IconDroplet />+ 8 oz
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--lg"
+                  onClick={() => patch({ waterOz: (entry.waterOz ?? 0) + 16 })}
+                >
+                  <IconDroplet />+ 16 oz
+                </button>
+              </div>
+              {entry.waterOz !== null && (
+                <p className="small">
+                  <strong>{entry.waterOz} oz</strong> with this one.{' '}
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    style={{ padding: 0, minHeight: 'auto' }}
+                    onClick={() => patch({ waterOz: null })}
+                  >
+                    Clear
+                  </button>
+                </p>
+              )}
             </div>
           </Card>
 

@@ -9,7 +9,6 @@ import { Report } from './screens/Report'
 import { Settings } from './screens/Settings'
 import { LogStool } from './screens/LogStool'
 import { LogFood } from './screens/LogFood'
-import { LogDaily } from './screens/LogDaily'
 import { Voice } from './screens/Voice'
 import { Alert } from './components/ui'
 import { IconHome, IconInsights, IconSettings, IconToday } from './components/icons'
@@ -26,7 +25,7 @@ const TABS: { route: Route; label: string; Icon: typeof IconToday }[] = [
 
 /** The entry forms are full-screen tasks; the tab bar would only offer a way
     to lose an unsaved entry. */
-const FULL_SCREEN: Route['name'][] = ['log-stool', 'log-food', 'log-daily', 'voice']
+const FULL_SCREEN: Route['name'][] = ['log-stool', 'log-food', 'voice']
 
 export function App() {
   const route = useRoute()
@@ -110,7 +109,5 @@ function renderRoute(route: Route) {
       return <LogStool key={route.id ?? 'new'} id={route.id} draft={takeStoolDraft()} />
     case 'log-food':
       return <LogFood key={route.id ?? 'new'} id={route.id} draft={takeFoodDraft()} />
-    case 'log-daily':
-      return <LogDaily key={route.date ?? 'today'} date={route.date} />
   }
 }

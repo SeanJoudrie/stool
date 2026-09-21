@@ -17,30 +17,20 @@ import {
   type ReactNode,
 } from 'react'
 import * as db from './db/db'
-import {
-  DEFAULT_SETTINGS,
-  newId,
-  type DailyEntry,
-  type FoodEntry,
-  type Settings,
-  type StoolEntry,
-} from './db/schema'
+import { DEFAULT_SETTINGS, newId, type FoodEntry, type Settings, type StoolEntry } from './db/schema'
 import { processImage } from './lib/image'
-import { dateKey } from './lib/time'
 
 interface StoreValue {
   ready: boolean
   error: string | null
   stool: StoolEntry[]
   food: FoodEntry[]
-  daily: DailyEntry[]
   settings: Settings
 
   saveStool: (entry: StoolEntry) => Promise<void>
   removeStool: (id: string) => Promise<void>
   saveFood: (entry: FoodEntry) => Promise<void>
   removeFood: (id: string) => Promise<void>
-  saveDaily: (entry: DailyEntry) => Promise<void>
   saveSettings: (patch: Partial<Settings>) => Promise<void>
 
   addPhoto: (file: File) => Promise<string>
@@ -52,33 +42,6 @@ interface StoreValue {
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
-
-export function blankDaily(key: string = dateKey(Date.now())): DailyEntry {
-  const now = Date.now()
-  return {
-    id: key,
-    kind: 'daily',
-    waterOz: null,
-    sleepHours: null,
-    stress: null,
-    fatigue: null,
-    bloating: null,
-    gas: null,
-    nausea: null,
-    travel: false,
-    weightLb: null,
-    meds: [],
-    caffeineDrinks: null,
-    feverF: null,
-    dehydrationSigns: false,
-    drillWeekend: false,
-    fieldFood: false,
-    ruckOrRun: false,
-    notes: '',
-    createdAt: now,
-    updatedAt: now,
-  }
-}
 
 export function blankStool(ts = Date.now()): StoolEntry {
   return {
@@ -108,6 +71,7 @@ export function blankFood(ts = Date.now()): FoodEntry {
     items: [],
     tags: [],
     mealKind: 'meal',
+    waterOz: null,
     notes: '',
     source: 'manual',
     createdAt: Date.now(),
@@ -120,22 +84,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [stool, setStool] = useState<StoolEntry[]>([])
   const [food, setFood] = useState<FoodEntry[]>([])
-  const [daily, setDaily] = useState<DailyEntry[]>([])
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
 
   const reload = useCallback(async () => {
     try {
-      const [s, f, d, cfg] = await Promise.all([
-        db.listStool(),
-        db.listFood(),
-        db.listDaily(),
-        db.getSettings(),
-      ])
+      const [s, f, cfg] = await Promise.all([db.listStool(), db.listFood(), db.getSettings()])
       setStool(s.sort((a, b) => b.ts - a.ts))
       setFood(f.sort((a, b) => b.ts - a.ts))
-      setDaily(d)
       setSettings(cfg)
       setError(null)
     } catch (e) {
@@ -188,12 +145,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setFood((prev) => prev.filter((e) => e.id !== id))
   }, [])
 
-  const saveDaily = useCallback(async (entry: DailyEntry) => {
-    const record = { ...entry, updatedAt: Date.now() }
-    await db.putDaily(record)
-    setDaily((prev) => [...prev.filter((e) => e.id !== record.id), record])
-  }, [])
-
   const saveSettings = useCallback(async (patch: Partial<Settings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch }
@@ -215,13 +166,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<StoreValue>(
     () => ({
-      ready, error, stool, food, daily, settings,
-      saveStool, removeStool, saveFood, removeFood, saveDaily, saveSettings,
+      ready, error, stool, food, settings,
+      saveStool, removeStool, saveFood, removeFood, saveSettings,
       addPhoto, removePhoto, reload, toast, toastMessage,
     }),
     [
-      ready, error, stool, food, daily, settings,
-      saveStool, removeStool, saveFood, removeFood, saveDaily, saveSettings,
+      ready, error, stool, food, settings,
+      saveStool, removeStool, saveFood, removeFood, saveSettings,
       addPhoto, removePhoto, reload, toast, toastMessage,
     ],
   )
@@ -261,9 +212,4 @@ export function usePhotoUrl(photoId: string | null): string | null {
   }, [photoId])
 
   return url
-}
-
-export function useDailyFor(key: string): DailyEntry {
-  const { daily } = useStore()
-  return useMemo(() => daily.find((d) => d.id === key) ?? blankDaily(key), [daily, key])
 }

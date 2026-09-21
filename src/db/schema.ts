@@ -253,47 +253,13 @@ export interface FoodEntry {
   items: string[]
   tags: FoodTag[]
   mealKind: MealKind
+  /** Ounces of water drunk with this. Water lives here rather than in a
+      tracker of its own — it is the one non-food thing that changes stool, and
+      it does not deserve a button. */
+  waterOz: number | null
   notes: string
   source: 'manual' | 'voice'
   transcript?: string
-  createdAt: number
-  updatedAt: number
-}
-
-export type Severity = 'none' | 'mild' | 'bad'
-
-export const SEVERITIES: readonly { id: Severity; label: string }[] = [
-  { id: 'none', label: 'None' },
-  { id: 'mild', label: 'Mild' },
-  { id: 'bad', label: 'Bad' },
-] as const
-
-export interface DailyEntry {
-  /** Local calendar day, `YYYY-MM-DD`. Also the primary key. */
-  id: string
-  kind: 'daily'
-  waterOz: number | null
-  sleepHours: number | null
-  /** 1 = none, 10 = severe. */
-  stress: number | null
-  fatigue: number | null
-  bloating: Severity | null
-  gas: Severity | null
-  nausea: Severity | null
-  travel: boolean
-  weightLb: number | null
-  meds: string[]
-  caffeineDrinks: number | null
-  /** Highest reading that day, in °F. Above 101.5 with GI symptoms is a red flag. */
-  feverF: number | null
-  /** Dizzy on standing, or no urination for 8+ hours. A volume-depletion sign. */
-  dehydrationSigns: boolean
-  /** Service-specific context. These are the highest-signal days: irregular
-      eating, dehydration, stress and physical load all stack at once. */
-  drillWeekend: boolean
-  fieldFood: boolean
-  ruckOrRun: boolean
-  notes: string
   createdAt: number
   updatedAt: number
 }
@@ -312,14 +278,14 @@ export type ThemePref = 'system' | 'light' | 'dark'
 
 export interface Settings {
   id: 'settings'
+  /**
+   * Optional, and only used to turn "you lost a lot of fluid today" into an
+   * amount worth drinking. It is not a weight log and has no screen.
+   */
   bodyWeightLb: number | null
   theme: ThemePref
   photosEnabled: boolean
   redFlagAlerts: boolean
-  /** Hides the drill-weekend / field-food / ruck fields for civilian users. */
-  guardFields: boolean
-  waterTargetOz: number
-  fiberTargetG: number
   onboarded: boolean
   schemaVersion: number
 }
@@ -330,11 +296,8 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   photosEnabled: true,
   redFlagAlerts: true,
-  guardFields: false,
-  waterTargetOz: 100,
-  fiberTargetG: 28,
   onboarded: false,
-  schemaVersion: 1,
+  schemaVersion: 2,
 }
 
 export type AnyEntry = StoolEntry | FoodEntry
