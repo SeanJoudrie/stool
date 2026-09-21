@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Stool">
+  <rect width="512" height="512" rx="114.5" fill="#0f2733"/>
+  <g>
+    <rect x="71.7" y="252.4" width="98.3" height="111.6" rx="27.5" fill="#ffffff"/>
+    <rect x="206.9" y="120.0" width="98.3" height="244.0" rx="27.5" fill="#4fc3cb"/>
+    <rect x="342.1" y="197.5" width="98.3" height="166.5" rx="27.5" fill="#ffffff"/>
+    <rect x="71.7" y="384.0" width="368.6" height="43.9" rx="21.9" fill="#ffffff"/>
+  </g>
+</svg>

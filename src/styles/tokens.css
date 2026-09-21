@@ -1,0 +1,191 @@
+/*
+ * Design tokens.
+ *
+ * The visual target is a clinical record, not a novelty app: cool neutral
+ * surfaces, hairline rules, restrained teal accent, no illustration and no
+ * humour. Anything a gastroenterologist would be handed should look like it
+ * came out of a chart system.
+ *
+ * Chart colours are a separate, validated set (see docs/DESIGN.md). They are
+ * NOT the UI accent — a series colour never doubles as a button.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --plane: #eef2f5;
+  --surface: #ffffff;
+  --surface-2: #f6f9fb;
+  --surface-sunken: #e7edf1;
+  --overlay: rgba(15, 31, 42, 0.45);
+
+  /* Ink */
+  --ink: #0f1f2a;
+  --ink-2: #47606f;
+  --ink-3: #74899a;
+  --ink-on-accent: #ffffff;
+
+  /* Lines */
+  --line: #dde5ea;
+  --line-strong: #c3d0d8;
+  --focus: #0e7c86;
+
+  /* Accent — interface only */
+  --accent: #0e7c86;
+  --accent-hover: #0b6670;
+  --accent-wash: #e2f1f2;
+
+  /* Status — reserved. Always shipped with an icon and a label, never colour
+     alone, because warning/serious sit below 3:1 on the light surface. */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --status-good-wash: #e8f6e8;
+  --status-warning-wash: #fdf3df;
+  --status-serious-wash: #fceee7;
+  --status-critical-wash: #faeaea;
+  --status-critical-ink: #a32a2a;
+
+  /* Chart tokens — validated against #ffffff / #161d24.
+     Diverging scale for the Bristol axis: warm pole = hard, gray = normal,
+     cool pole = loose. Gray is the diverging midpoint and is meant to read as
+     "no deviation". */
+  --viz-hard: #eb6834;
+  --viz-normal: #898781;
+  --viz-loose: #2a78d6;
+  --viz-single: #4a3aa7; /* single-series magnitude (correlation bars) */
+  --viz-grid: #e4eaee;
+  --viz-axis: #c3d0d8;
+  --viz-surface: #ffffff;
+  --viz-deemphasis: #c3d0d8;
+
+  /* Type */
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --fs-display: 2.125rem;
+  --fs-h1: 1.5rem;
+  --fs-h2: 1.125rem;
+  --fs-h3: 1rem;
+  --fs-body: 0.9375rem;
+  --fs-sm: 0.8125rem;
+  --fs-xs: 0.75rem;
+  --lh-tight: 1.2;
+  --lh-body: 1.5;
+
+  /* Space — 4px base */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.25rem;
+  --s6: 1.5rem;
+  --s8: 2rem;
+  --s10: 2.5rem;
+  --s12: 3rem;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* Elevation — restrained; a record card is flat, not floating */
+  --shadow-sm: 0 1px 2px rgba(15, 31, 42, 0.06);
+  --shadow-md: 0 2px 8px rgba(15, 31, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 31, 42, 0.16);
+
+  /* Layout */
+  --content-max: 640px;
+  --tabbar-h: 58px;
+  --tap: 44px; /* minimum touch target */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --plane: #0b1016;
+    --surface: #161d24;
+    --surface-2: #1c252e;
+    --surface-sunken: #111820;
+    --overlay: rgba(0, 0, 0, 0.6);
+
+    --ink: #eef4f8;
+    --ink-2: #a5b9c6;
+    --ink-3: #7b8f9c;
+    --ink-on-accent: #04222a;
+
+    --line: #26313b;
+    --line-strong: #37454f;
+    --focus: #3fb5bd;
+
+    --accent: #3fb5bd;
+    --accent-hover: #59c8cf;
+    --accent-wash: #11303a;
+
+    --status-good-wash: #10240f;
+    --status-warning-wash: #2b2210;
+    --status-serious-wash: #2e1d14;
+    --status-critical-wash: #2c1414;
+    --status-critical-ink: #f09b9b;
+
+    --viz-hard: #d95926;
+    --viz-normal: #93918a;
+    --viz-loose: #3987e5;
+    --viz-single: #9085e9;
+    --viz-grid: #232c35;
+    --viz-axis: #37454f;
+    --viz-surface: #161d24;
+    --viz-deemphasis: #37454f;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Explicit dark selection must beat an OS light preference. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --plane: #0b1016;
+  --surface: #161d24;
+  --surface-2: #1c252e;
+  --surface-sunken: #111820;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --ink: #eef4f8;
+  --ink-2: #a5b9c6;
+  --ink-3: #7b8f9c;
+  --ink-on-accent: #04222a;
+
+  --line: #26313b;
+  --line-strong: #37454f;
+  --focus: #3fb5bd;
+
+  --accent: #3fb5bd;
+  --accent-hover: #59c8cf;
+  --accent-wash: #11303a;
+
+  --status-good-wash: #10240f;
+  --status-warning-wash: #2b2210;
+  --status-serious-wash: #2e1d14;
+  --status-critical-wash: #2c1414;
+  --status-critical-ink: #f09b9b;
+
+  --viz-hard: #d95926;
+  --viz-normal: #93918a;
+  --viz-loose: #3987e5;
+  --viz-single: #9085e9;
+  --viz-grid: #232c35;
+  --viz-axis: #37454f;
+  --viz-surface: #161d24;
+  --viz-deemphasis: #37454f;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
