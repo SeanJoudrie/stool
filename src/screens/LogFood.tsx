@@ -43,6 +43,8 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
 
   const patch = (p: Partial<FoodEntry>) => setEntry((e) => ({ ...e, ...p }))
 
+  const hasExtras = Boolean(existing) || entry.notes.length > 0 || entry.mealKind !== 'meal'
+
   /** Items the user has logged before, most recent first — the fastest path. */
   const recent = useMemo(() => {
     const seen = new Set<string>()
@@ -120,42 +122,6 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
       />
       <main className="main">
         <div className="stack">
-          <Card>
-            <div className="stack">
-              <Field
-                label="Time"
-                id="food-time"
-                value={<span className="muted small">{relativeTime(entry.ts)}</span>}
-                hint="This timestamp is what makes the correlations work — it is worth getting roughly right."
-              >
-                <div style={{ display: 'flex', gap: 'var(--s2)' }}>
-                  <input
-                    id="food-time"
-                    className="input"
-                    type="datetime-local"
-                    value={toLocalInput(entry.ts)}
-                    onChange={(e) => patch({ ts: fromLocalInput(e.target.value) })}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn--secondary"
-                    onClick={() => patch({ ts: Date.now() })}
-                  >
-                    <IconClock />
-                    Now
-                  </button>
-                </div>
-              </Field>
-
-              <Segmented
-                label="Type"
-                options={MEAL_KINDS}
-                value={entry.mealKind}
-                onChange={(v) => patch({ mealKind: v })}
-              />
-            </div>
-          </Card>
-
           <Card title="What you ate">
             <div className="stack">
               <div style={{ display: 'flex', gap: 'var(--s2)' }}>
@@ -257,38 +223,81 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
             </div>
           </Card>
 
-          <Card
-            title="Exposure tags"
-            subtitle={
-              tagsTouched
-                ? 'You have edited these, so they will not change again on their own.'
-                : 'Filled in from what you entered. Correlations run on these, so correct anything wrong.'
-            }
-          >
-            <div className="chipgroup">
-              {FOOD_TAGS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className="chip"
-                  aria-pressed={entry.tags.includes(t.id)}
-                  title={t.note}
-                  onClick={() => toggleTag(t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </Card>
+          <details className="more" open={hasExtras}>
+            <summary>
+              Add more detail
+              <span className="more__hint">optional</span>
+            </summary>
+            <div className="more__body">
+              <div className="stack">
+                <Segmented
+                  label="Type"
+                  options={MEAL_KINDS}
+                  value={entry.mealKind}
+                  onChange={(v) => patch({ mealKind: v })}
+                />
 
-          <Card title="Notes">
-            <textarea
-              className="textarea"
-              placeholder="Where you ate, how it was prepared, anything that sat out."
-              value={entry.notes}
-              onChange={(e) => patch({ notes: e.target.value })}
-            />
-          </Card>
+                <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
+                  <legend className="field__label" style={{ width: '100%', padding: 0 }}>
+                    Exposure tags
+                  </legend>
+                  <p className="field__hint" style={{ margin: '0 0 var(--s2)' }}>
+                    {tagsTouched
+                      ? 'You have edited these, so they will not change again on their own.'
+                      : 'Filled in from what you entered. The patterns screen runs on these, so correct anything wrong.'}
+                  </p>
+                  <div className="chipgroup">
+                    {FOOD_TAGS.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="chip"
+                        aria-pressed={entry.tags.includes(t.id)}
+                        title={t.note}
+                        onClick={() => toggleTag(t.id)}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <Field label="Notes">
+                  <textarea
+                    className="textarea"
+                    placeholder="Where you ate, how it was prepared, anything that sat out."
+                    value={entry.notes}
+                    onChange={(e) => patch({ notes: e.target.value })}
+                  />
+                </Field>
+
+              <Field
+                label="Time"
+                id="food-time"
+                value={<span className="muted small">{relativeTime(entry.ts)}</span>}
+                hint="This timestamp is what makes the correlations work — it is worth getting roughly right."
+              >
+                <div style={{ display: 'flex', gap: 'var(--s2)' }}>
+                  <input
+                    id="food-time"
+                    className="input"
+                    type="datetime-local"
+                    value={toLocalInput(entry.ts)}
+                    onChange={(e) => patch({ ts: fromLocalInput(e.target.value) })}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    onClick={() => patch({ ts: Date.now() })}
+                  >
+                    <IconClock />
+                    Now
+                  </button>
+                </div>
+              </Field>
+              </div>
+            </div>
+          </details>
 
           <button className="btn btn--primary btn--lg btn--block" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save meal'}
