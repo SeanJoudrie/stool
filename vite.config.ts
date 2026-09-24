@@ -23,10 +23,10 @@ export default defineConfig({
         navigateFallback: 'index.html',
       },
       manifest: {
-        name: 'Stool — GI Journal',
+        name: 'Stool — a poop journal',
         short_name: 'Stool',
         description:
-          'A clinical stool and food journal for tracking GI symptoms, spotting dietary triggers, and preparing for a gastroenterology appointment.',
+          'A poop journal. Log it in about fifteen seconds, see what keeps showing up before a bad one, and print something you can hand to a doctor.',
         theme_color: '#1f5c39',
         background_color: '#0c1410',
         display: 'standalone',

@@ -24,7 +24,7 @@ import { deriveRating } from '../lib/analysis'
 import { flagsForEntry } from '../lib/redflags'
 import { toLocalInput, fromLocalInput, relativeTime } from '../lib/time'
 import { navigate, goBack } from '../router'
-import { AppBar, Alert, ChipGroup, Card, Field, Scale } from '../components/ui'
+import { AppBar, Alert, ChipGroup, Card, Field, Scale, Spinner } from '../components/ui'
 import { BristolPicker } from '../components/BristolPicker'
 import { PhotoField } from '../components/PhotoField'
 import { RatingDot, TIER_LABEL, ratingTier } from '../components/RatingDot'
@@ -181,7 +181,7 @@ export function LogStool({ id, draft }: { id?: string; draft?: Partial<StoolEntr
               ))}
             </div>
             {entry.color && (
-              <p className="field__hint" style={{ marginTop: 'var(--s3)' }}>
+              <p className="field__hint note">
                 {COLORS.find((c) => c.id === entry.color)?.note}
               </p>
             )}
@@ -266,7 +266,7 @@ export function LogStool({ id, draft }: { id?: string; draft?: Partial<StoolEntr
                   id="stool-time"
                   value={<span className="muted small">{relativeTime(entry.ts)}</span>}
                 >
-                  <div style={{ display: 'flex', gap: 'var(--s2)' }}>
+                  <div className="input-row">
                     <input
                       id="stool-time"
                       className="input"
@@ -295,7 +295,8 @@ export function LogStool({ id, draft }: { id?: string; draft?: Partial<StoolEntr
           </details>
 
           <button className="btn btn--primary btn--lg btn--block" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving && <Spinner />}
+            {saving ? 'Saving' : 'Save'}
           </button>
 
           {existing && (

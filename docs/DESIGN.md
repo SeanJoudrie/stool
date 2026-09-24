@@ -142,6 +142,72 @@ everything else sits behind one **Add more detail** tap. The disclosure opens
 automatically when an entry already has data in it, so editing never hides
 what you previously wrote.
 
+## Deliberate non-defaults
+
+A pass was made specifically against the habits that make software look like it
+was shipped in one sitting. Each of these was a real finding in this codebase,
+not a hypothetical:
+
+**No purple.** The correlation bars were `#4a3aa7`. Rather than swap in another
+new hue, they now reuse the rating scale's red — those bars measure the share
+of events that were *bad*, which is that scale's own meaning. Teal and a
+neutral slate were both tried first and rejected: the slate failed the chroma
+floor and collided with the grey "normal" band, and teal failed separation
+against it (ΔE 12.5 light, 11.3 dark, against a floor of 15). Reusing red
+removes a colour from the system instead of adding a sixth.
+
+**Solid chrome.** The header and tab bar were translucent with a
+`backdrop-filter` blur. They are now opaque. Blurred bars interact badly with
+whatever scrolls under them and are one of the most recognisable tells there
+is.
+
+**Three radii and a pill.** There were five (6/10/14/20/999) plus a stray raw
+`3px`. Now 8/12/16 on the same 4px rhythm as the spacing scale, plus the pill,
+plus `50%` where something is actually a circle. A nested control derives its
+inner radius from its track (`calc(var(--r-md) - 2px)`) so the curves stay
+concentric rather than being guessed at.
+
+**One font, one ramp, one shadow set.** A single `font-family` declaration in
+the whole stylesheet. Elevation comes from three tokens and nothing else.
+
+**One looping animation, and it is load-bearing.** The microphone ring is how
+you know it is listening. It was an expanding glow; it is now a calm ring, and
+the global reduced-motion rule stops it entirely.
+
+**Real loading states.** One spinner, used everywhere. It takes the place of a
+button's icon so the button holds its width instead of reflowing, and the first
+paint shows the home screen's actual shape as a skeleton rather than a line of
+text in the middle of an empty screen.
+
+**A share card that is real type.** `public/og.png` is rendered from
+`scripts/og-card.html` through headless Chromium, so the type is actual type
+with actual kerning. The first attempt drew text with a hand-rolled 5x7 bitmap
+font and looked exactly like the thing this section is about — pixelated,
+overlapping, running off the card. It was thrown away.
+
+**Spacing stays on the grid.** Every padding, margin and gap resolves to the
+4px scale. The two exceptions are 1px hairlines and the 2px surface gap between
+chart marks, both of which are specs rather than rhythm. A calendar cell that
+was nudged by a magic `9px` now derives that offset from the dot size it has to
+line up with.
+
+## Responsiveness
+
+Checked at 320, 390, 430 and 768px, on every screen, by measuring rather than
+looking: any element extending past the viewport, any tap target under 24px,
+any horizontal document scroll. Three real bugs came out of it.
+
+The report's five-column tables forced the whole page to scroll sideways — up
+to 218px at 320px wide. Wide tables now scroll inside their own container,
+which is the fix; the page never does.
+
+The "Now" button beside the timestamp field hung off the right edge at 320px,
+because the input's `width: 100%` basis refuses to shrink in a flex row.
+`.input-row` gives it `flex: 1; min-width: 0`.
+
+The ten buttons of a 1–10 scale came out 23px wide at 320px, just under the
+minimum target. Tightening the gutter below 360px buys back the 16px.
+
 ## Charts
 
 Hand-rolled SVG. There are three chart forms in the whole app, and owning the
@@ -165,6 +231,24 @@ through loose at the top so the stack mirrors the scale. It answers the
 question people actually bring to that chart — "how have the last few weeks
 gone" — and stays legible at any density the app can realistically produce.
 Days with nothing logged render as gaps rather than being closed up.
+
+### The chart hit surface
+
+The day-by-day chart originally gave every column its own `<rect>` hit target.
+At six weeks on a phone those were 8px wide — below any reasonable minimum —
+and they also put thirty tab stops in the middle of the page, which is its own
+kind of hostile.
+
+It is now one focusable surface over the whole plot: the pointer picks the
+nearest column, and the arrow keys walk it, with Home, End and Escape. The
+chart also shows only as many days as can carry a 12px column, and both ends of
+the axis are labelled so the shorter window is self-describing. The table view
+underneath still holds every day.
+
+Charts with a handful of genuinely discrete categories — the Bristol
+distribution, the correlation bars — keep per-item targets, because seven or
+eight stops for seven or eight things is correct. The distinction is by form,
+not by accident.
 
 ### Two more bugs worth recording
 

@@ -12,6 +12,7 @@
 import { useRef, useState } from 'react'
 import { usePhotoUrl } from '../store'
 import { IconCamera, IconEye, IconEyeOff, IconLock, IconTrash } from './icons'
+import { Spinner } from './ui'
 
 export function PhotoField({
   photoId,
@@ -38,8 +39,8 @@ export function PhotoField({
           onClick={() => inputRef.current?.click()}
           disabled={busy}
         >
-          <IconCamera />
-          {busy ? 'Processing…' : 'Attach a photograph'}
+          {busy ? <Spinner /> : <IconCamera />}
+          {busy ? 'Processing' : 'Attach a photograph'}
         </button>
         <input
           ref={inputRef}

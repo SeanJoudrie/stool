@@ -17,7 +17,7 @@ import { COMMON_FOODS, autoTagItems, splitItems } from '../lib/foodTags'
 import { blankFood, useStore } from '../store'
 import { fromLocalInput, relativeTime, toLocalInput } from '../lib/time'
 import { goBack, navigate } from '../router'
-import { AppBar, Card, Field, Segmented } from '../components/ui'
+import { AppBar, Card, Field, Segmented, Spinner } from '../components/ui'
 import { IconClock, IconClose, IconDroplet, IconPlus, IconTrash } from '../components/icons'
 
 const MEAL_KINDS: { id: MealKind; label: string }[] = [
@@ -124,7 +124,7 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
         <div className="stack">
           <Card title="What you ate">
             <div className="stack">
-              <div style={{ display: 'flex', gap: 'var(--s2)' }}>
+              <div className="input-row">
                 <input
                   className="input"
                   placeholder="e.g. pastrami sandwich, coleslaw"
@@ -237,8 +237,8 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
                   onChange={(v) => patch({ mealKind: v })}
                 />
 
-                <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
-                  <legend className="field__label" style={{ width: '100%', padding: 0 }}>
+                <fieldset className="fieldset">
+                  <legend className="field__label">
                     Exposure tags
                   </legend>
                   <p className="field__hint" style={{ margin: '0 0 var(--s2)' }}>
@@ -277,7 +277,7 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
                 value={<span className="muted small">{relativeTime(entry.ts)}</span>}
                 hint="This timestamp is what makes the correlations work — it is worth getting roughly right."
               >
-                <div style={{ display: 'flex', gap: 'var(--s2)' }}>
+                <div className="input-row">
                   <input
                     id="food-time"
                     className="input"
@@ -300,7 +300,8 @@ export function LogFood({ id, draft }: { id?: string; draft?: Partial<FoodEntry>
           </details>
 
           <button className="btn btn--primary btn--lg btn--block" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save meal'}
+            {saving && <Spinner />}
+            {saving ? 'Saving' : 'Save meal'}
           </button>
 
           {existing && (

@@ -3,14 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A clinical stool and food journal for people managing GI conditions. Local-first, offline, private.",
+  "description": "A poop journal. Local-first, offline, private.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "og": "node scripts/render-og.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
