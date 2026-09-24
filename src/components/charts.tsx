@@ -255,7 +255,7 @@ export interface DayColumn {
  */
 export function DailyBandChart({ days }: { days: DayColumn[] }) {
   const [ref, width] = useWidth<HTMLDivElement>()
-  const [tip, setTip] = useState<TooltipState | null>(null)
+  const [active, setActive] = useState<number | null>(null)
 
   const H = 170
   const PAD = { top: 14, right: 6, bottom: 30, left: 24 }
@@ -264,17 +264,54 @@ export function DailyBandChart({ days }: { days: DayColumn[] }) {
 
   if (days.length === 0) return <p className="empty">No events with a recorded form yet.</p>
 
-  const max = Math.max(1, ...days.map((d) => d.total))
+  /*
+   * Only show as many days as can carry a usable column. Six weeks crammed into
+   * a 320px phone gave 8px columns, which are not really hittable. Both ends of
+   * the axis are labelled so a shorter window is self-describing, and the table
+   * view below still holds every day.
+   */
+  const maxCols = Math.max(7, Math.floor(plotW / 12))
+  const shown = days.length > maxCols ? days.slice(-maxCols) : days
+
+  const max = Math.max(1, ...shown.map((d) => d.total))
   const ticks = niceTicks(max, 3)
   const scaleMax = ticks[ticks.length - 1] ?? 1
-  const band = plotW / days.length
+  const band = plotW / shown.length
   const barW = Math.max(3, Math.min(24, band - 2))
   const GAP = 2 // surface gap between stacked segments
+
+  const summarise = (d: DayColumn) =>
+    d.total === 0
+      ? 'nothing logged'
+      : [d.hard ? `${d.hard} hard` : null, d.normal ? `${d.normal} normal` : null, d.loose ? `${d.loose} loose` : null]
+          .filter(Boolean)
+          .join(' · ')
+
+  /*
+   * One hit surface across the whole plot rather than a rect per column.
+   *
+   * Per-column targets were 12px wide, below the minimum, and they also put
+   * thirty tab stops in the middle of the page — nobody wants to press Tab
+   * thirty times to cross a chart. This is the full plot as a single focusable
+   * region: the pointer picks the nearest column, and the arrow keys walk it.
+   */
+  const indexAt = (clientX: number, rect: DOMRect) => {
+    const local = clientX - rect.left - PAD.left
+    return Math.max(0, Math.min(shown.length - 1, Math.floor(local / band)))
+  }
+
+  const step = (delta: number) =>
+    setActive((prev) => {
+      const next = (prev ?? shown.length - 1) + delta
+      return Math.max(0, Math.min(shown.length - 1, next))
+    })
+
+  const activeDay = active !== null ? shown[active] : undefined
 
   return (
     <div className="viz__plot" ref={ref}>
       {width > 0 && (
-        <svg width={width} height={H} role="img" aria-label="Stool events per day, grouped by Bristol band">
+        <svg width={width} height={H} aria-hidden="true">
           {ticks.map((t) => {
             const y = PAD.top + plotH - (t / scaleMax) * plotH
             return (
@@ -287,7 +324,7 @@ export function DailyBandChart({ days }: { days: DayColumn[] }) {
             )
           })}
 
-          {days.map((d, i) => {
+          {shown.map((d, i) => {
             const x = PAD.left + i * band + (band - barW) / 2
             const segments: { band: BristolBand; count: number }[] = [
               { band: 'hard', count: d.hard },
@@ -295,37 +332,18 @@ export function DailyBandChart({ days }: { days: DayColumn[] }) {
               { band: 'loose', count: d.loose },
             ]
             let cursor = PAD.top + plotH
-            const content = (
-              <>
-                <strong>{formatDay(d.ts)}</strong>
-                <br />
-                {d.total === 0
-                  ? 'nothing logged'
-                  : [
-                      d.hard ? `${d.hard} hard` : null,
-                      d.normal ? `${d.normal} normal` : null,
-                      d.loose ? `${d.loose} loose` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-              </>
-            )
             return (
               <g key={d.key}>
-                <rect
-                  x={PAD.left + i * band}
-                  y={PAD.top}
-                  width={Math.max(band, 8)}
-                  height={plotH}
-                  fill="transparent"
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${formatDay(d.ts)}: ${d.total} events`}
-                  onMouseEnter={() => setTip({ x: PAD.left + i * band + band / 2, y: PAD.top - 2, content })}
-                  onMouseLeave={() => setTip(null)}
-                  onFocus={() => setTip({ x: PAD.left + i * band + band / 2, y: PAD.top - 2, content })}
-                  onBlur={() => setTip(null)}
-                />
+                {i === active && (
+                  <rect
+                    x={PAD.left + i * band}
+                    y={PAD.top}
+                    width={band}
+                    height={plotH}
+                    fill="var(--viz-normal)"
+                    opacity="0.14"
+                  />
+                )}
                 {segments.map((seg) => {
                   if (seg.count === 0) return null
                   const h = (seg.count / scaleMax) * plotH
@@ -356,14 +374,44 @@ export function DailyBandChart({ days }: { days: DayColumn[] }) {
             strokeWidth="1"
           />
           <text x={PAD.left} y={H - 10} className="viz__tick">
-            {formatDay(days[0]!.ts)}
+            {formatDay(shown[0]!.ts)}
           </text>
           <text x={width - PAD.right} y={H - 10} textAnchor="end" className="viz__tick">
-            {formatDay(days[days.length - 1]!.ts)}
+            {formatDay(shown[shown.length - 1]!.ts)}
           </text>
         </svg>
       )}
-      <Tooltip state={tip} />
+
+      {width > 0 && (
+        <div
+          className="viz__surface"
+          role="group"
+          tabIndex={0}
+          aria-label={`Events per day for the last ${shown.length} days. Use the arrow keys to step through days.`}
+          onMouseMove={(e) => setActive(indexAt(e.clientX, e.currentTarget.getBoundingClientRect()))}
+          onMouseLeave={() => setActive(null)}
+          onBlur={() => setActive(null)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); step(1) }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1) }
+            else if (e.key === 'Home') { e.preventDefault(); setActive(0) }
+            else if (e.key === 'End') { e.preventDefault(); setActive(shown.length - 1) }
+            else if (e.key === 'Escape') setActive(null)
+          }}
+        />
+      )}
+
+      {activeDay && (
+        <div
+          className="viz__tip"
+          style={{ left: PAD.left + (active ?? 0) * band + band / 2, top: PAD.top - 2 }}
+          role="status"
+        >
+          <strong>{formatDay(activeDay.ts)}</strong>
+          <br />
+          {summarise(activeDay)}
+        </div>
+      )}
     </div>
   )
 }

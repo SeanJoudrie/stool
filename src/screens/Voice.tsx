@@ -18,7 +18,7 @@ import { blankFood, blankStool, useStore } from '../store'
 import { setFoodDraft, setStoolDraft } from '../lib/draft'
 import { formatDateTime } from '../lib/time'
 import { navigate } from '../router'
-import { AppBar, Alert, Card } from '../components/ui'
+import { AppBar, Alert, Card, Spinner } from '../components/ui'
 import { IconCheck, IconEdit, IconFood, IconMic } from '../components/icons'
 
 const EXAMPLES = [
@@ -153,7 +153,7 @@ export function Voice() {
                   onChange={(e) => speech.setTranscript(e.target.value)}
                 />
                 {speech.error && (
-                  <p className="field__hint" style={{ marginTop: 'var(--s2)' }}>
+                  <p className="field__hint note">
                     {speech.error}
                   </p>
                 )}
@@ -240,7 +240,7 @@ export function Voice() {
                     />
                   </dl>
                   {!parsed.stool.tsExplicit && (
-                    <p className="field__hint" style={{ marginTop: 'var(--s3)' }}>
+                    <p className="field__hint note">
                       You did not say a time, so this is logged as now. Tap Edit to change it.
                     </p>
                   )}
@@ -276,8 +276,8 @@ export function Voice() {
                     onClick={saveAll}
                     disabled={saving}
                   >
-                    <IconCheck />
-                    {saving ? 'Saving…' : parsed.intent === 'both' ? 'Save both entries' : 'Save entry'}
+                    {saving ? <Spinner /> : <IconCheck />}
+                    {saving ? 'Saving' : parsed.intent === 'both' ? 'Save both entries' : 'Save entry'}
                   </button>
                 )}
                 {!parsed.stool && (

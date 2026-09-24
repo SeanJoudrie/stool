@@ -68,8 +68,7 @@ button {
   min-height: 52px;
   padding: var(--s2) var(--s4);
   padding-top: calc(var(--s2) + env(safe-area-inset-top));
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: saturate(1.4) blur(12px);
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
@@ -141,8 +140,7 @@ button {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: saturate(1.4) blur(12px);
+  background: var(--surface);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -308,6 +306,27 @@ button {
 
 /* ---------------------------------------------------------------- forms --- */
 
+/*
+ * A fieldset used purely for grouping. The browser's default border, margin and
+ * padding on <fieldset> all have to go, and this was being repeated as an
+ * inline style on every grouped control.
+ */
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.fieldset > legend {
+  width: 100%;
+  padding: 0;
+}
+
+/* A hint or note that follows a block rather than a label. */
+.note {
+  margin-top: var(--s3);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -335,9 +354,24 @@ button {
   color: var(--ink-3);
 }
 
+/*
+ * An input beside a button. The input needs min-width:0 and flex:1 or its
+ * 100% basis refuses to shrink and pushes the button off the right edge —
+ * which is exactly what happened to the "Now" button at 320px.
+ */
+.input-row {
+  display: flex;
+  gap: var(--s2);
+  align-items: stretch;
+}
+
+.input-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
 .input,
-.textarea,
-.select {
+.textarea {
   width: 100%;
   min-height: var(--tap);
   padding: var(--s3);
@@ -351,16 +385,6 @@ button {
   min-height: 84px;
   resize: vertical;
   line-height: var(--lh-body);
-}
-
-.select {
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-  padding-right: var(--s8);
 }
 
 .input::placeholder,
@@ -455,6 +479,7 @@ button {
   flex: 1;
   min-height: 38px;
   border: 0;
+  /* Inner radius = outer minus the track's padding, so the curves stay concentric. */
   border-radius: calc(var(--r-md) - 2px);
   background: none;
   color: var(--ink-2);
@@ -675,12 +700,26 @@ button {
   min-height: 32px;
   font-size: var(--fs-xs);
   font-weight: 600;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow-sm);
 }
 
 /* ---------------------------------------------------------------- table --- */
+
+/*
+ * Wide tables scroll themselves rather than the page. The report's event log is
+ * five columns of dates and numbers and will never fit a 320px phone; letting
+ * the whole document scroll sideways to accommodate it is the actual bug.
+ */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap > .table {
+  min-width: 460px;
+}
 
 .table {
   width: 100%;
@@ -755,7 +794,7 @@ button {
 .swatch {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: 2px;
   flex: none;
   display: inline-block;
 }
@@ -1074,9 +1113,12 @@ button {
   color: var(--ink-3);
 }
 
+/* The only looping animation in the app, and it is load-bearing: it is how you
+   know the microphone is actually listening. Calm ring, no glow, and the
+   global reduced-motion rule stops it entirely for anyone who asked. */
 @keyframes mic-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
-  50% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 0%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+  50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 12%, transparent); }
 }
 
 .examples {
@@ -1187,7 +1229,7 @@ button {
   width: 100%;
   min-height: 104px;
   padding: var(--s5);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-lg);
   border: 2px solid var(--accent-edge);
   background: var(--accent);
   color: var(--ink-on-accent);
@@ -1346,8 +1388,8 @@ button {
   border: 0;
   border-radius: var(--r-md);
   background: none;
-  padding: 3px 2px;
-  min-height: 58px;
+  padding: var(--s1) 2px;
+  min-height: 60px;
 }
 
 .cal__cell[data-today='true'] {
@@ -1364,10 +1406,12 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Centred in the same box a 26px rating dot occupies, so logged and unlogged
+   days sit on one line without a magic offset. */
 .cal__empty {
   width: 8px;
   height: 8px;
-  margin-top: 9px;
+  margin: calc((26px - 8px) / 2) 0;
   border-radius: 50%;
   background: var(--rate-none);
 }
@@ -1494,4 +1538,95 @@ button {
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.01em;
+}
+
+/* -------------------------------------------------------------- loading --- */
+
+/*
+ * One spinner, used everywhere something is in flight. A button that changes
+ * its label but keeps its shape is the commonest "nothing is happening" bug,
+ * so the spinner takes the place of the icon and the button holds its width.
+ */
+.spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner--sm { width: 14px; height: 14px; border-width: 2px; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Reduced motion gets a static ring rather than nothing, so the state is
+   still visible without the rotation. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; border-top-color: currentColor; opacity: 0.55; }
+}
+
+/*
+ * First-paint skeleton. The journal is read from IndexedDB, which is fast but
+ * not instantaneous on a cold start, and a bare line of text in the middle of
+ * an empty screen reads as broken. These are the shapes that are about to
+ * arrive, so the layout does not jump when they do.
+ */
+.skeleton {
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton--hero { height: 104px; border-radius: var(--r-lg); }
+.skeleton--tile { height: 96px; border-radius: var(--r-lg); }
+.skeleton--wide { height: 68px; border-radius: var(--r-lg); }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+
+/* --------------------------------------------------------- narrow phones --- */
+
+/*
+ * At 320px the gutters were eating enough width that the ten scale buttons came
+ * out 23px wide, just under the minimum touch target. Tightening the gutter and
+ * the card padding buys back the 16px that fixes it.
+ */
+@media (max-width: 360px) {
+  .main { padding-left: var(--s3); padding-right: var(--s3); }
+  .card__head,
+  .card__body,
+  .card__sub { padding-left: var(--s3); padding-right: var(--s3); }
+  .more__body { padding: var(--s3); }
+  .more > summary { padding: var(--s3); }
+  .list__item { padding-left: var(--s3); padding-right: var(--s3); }
+  .hero { padding: var(--s4); }
+  .list__time { width: 56px; }
+}
+
+/*
+ * The chart's hit surface. Sits over the plot as one target rather than a rect
+ * per column, so the pointer always lands somewhere and keyboard users get one
+ * tab stop plus arrow keys instead of one stop per day.
+ */
+.viz__surface {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+
+.viz__surface:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-sm);
 }

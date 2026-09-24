@@ -174,6 +174,13 @@ Dependencies are React, Vite and `vite-plugin-pwa`. Routing, charts, state and
 the icon set are all in-repo; see [docs/DESIGN.md](docs/DESIGN.md) for why the
 charts are hand-rolled and how the palette was validated.
 
+## Share card
+
+`public/og.png` is the link preview. It is rendered from `scripts/og-card.html`
+by `npm run og`, which needs a Chromium — set `CHROMIUM=/path/to/chrome` if it
+cannot find one. The committed PNG stays valid until the card changes, so the
+render is only needed after editing the HTML.
+
 ## Deploying
 
 `.github/workflows/deploy.yml` typechecks, tests, builds and publishes to

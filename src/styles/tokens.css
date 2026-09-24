@@ -72,7 +72,10 @@
   --viz-hard: #eb6834;
   --viz-normal: #898781;
   --viz-loose: #2a78d6;
-  --viz-single: #4a3aa7; /* single-series magnitude (correlation bars) */
+  /* Correlation bars measure the share of events that were BAD, which is the
+     rating scale's own meaning — so they reuse its red rather than introduce a
+     sixth hue the reader has to learn. */
+  --viz-single: #d03b3b;
   --viz-grid: #e4eaee;
   --viz-axis: #c3d0d8;
   --viz-surface: #ffffff;
@@ -102,11 +105,12 @@
   --s10: 2.5rem;
   --s12: 3rem;
 
-  /* Radii */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
-  --r-xl: 20px;
+  /* Radii — three sizes on the same 4px rhythm as the spacing scale, plus a
+     pill. Anything rounder than this is a circle and says so with 50%. A pile
+     of near-miss radii is the fastest way to make a UI look unconsidered. */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
   --r-pill: 999px;
 
   /* Elevation — restrained; a record card is flat, not floating */
@@ -157,7 +161,7 @@
     --viz-hard: #d95926;
     --viz-normal: #93918a;
     --viz-loose: #3987e5;
-    --viz-single: #9085e9;
+    --viz-single: #e05a5a;
     --viz-grid: #22322a;
     --viz-axis: #354a3c;
     --viz-surface: #14201a;
@@ -206,7 +210,7 @@
   --viz-hard: #d95926;
   --viz-normal: #93918a;
   --viz-loose: #3987e5;
-  --viz-single: #9085e9;
+  --viz-single: #e05a5a;
   --viz-grid: #22322a;
   --viz-axis: #354a3c;
   --viz-surface: #14201a;

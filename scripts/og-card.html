@@ -1,0 +1,115 @@
+<!doctype html>
+<!--
+  Source for public/og.png, the link-preview card.
+
+  Rendered rather than hand-drawn so the type is real type — correct kerning,
+  the same system sans and the same colour tokens as the app itself. Regenerate
+  with `npm run og` after editing.
+
+  Deliberately plain: a mark, a name, one sentence about what it does, the URL.
+  No gradient, no glow, nothing decorative competing with the four words that
+  have to survive being shown at thumbnail size in a message list.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: 1200px;
+        height: 630px;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: #0c1410;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .card {
+        position: absolute;
+        inset: 40px;
+        background: #14201a;
+        border: 1px solid #24352a;
+        border-radius: 28px;
+        padding: 76px 80px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Mark and wordmark sit on one line as a lockup, so the mark's baseline
+         rule cannot be mistaken for an underline on the word. */
+      .lockup { display: flex; align-items: flex-end; gap: 28px; }
+
+      .mark { display: flex; flex-direction: column; gap: 7px; }
+      .mark .bars { display: flex; align-items: flex-end; gap: 8px; height: 74px; }
+      .mark i { display: block; width: 21px; border-radius: 7px; background: #ffffff; }
+      .mark i:nth-child(1) { height: 34px; }
+      .mark i:nth-child(2) { height: 74px; background: #7bd9a0; }
+      .mark i:nth-child(3) { height: 52px; }
+      .mark .rule { height: 8px; border-radius: 4px; background: #ffffff; }
+
+      h1 {
+        font-size: 84px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        color: #ffffff;
+        line-height: 0.86;
+      }
+
+      .lede {
+        font-size: 36px;
+        font-weight: 600;
+        color: #7bd9a0;
+        letter-spacing: -0.015em;
+        margin-top: 44px;
+      }
+
+      .sub {
+        font-size: 27px;
+        font-weight: 400;
+        color: #a3bcaa;
+        letter-spacing: -0.005em;
+        margin-top: 16px;
+        max-width: 800px;
+        line-height: 1.45;
+      }
+
+      .foot {
+        margin-top: auto;
+        padding-top: 30px;
+        border-top: 1px solid #24352a;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        font-size: 23px;
+        color: #7e9686;
+      }
+
+      .foot b { color: #ffffff; font-weight: 600; }
+      .foot span { color: #7e9686; }
+
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="lockup">
+        <div class="mark">
+          <div class="bars"><i></i><i></i><i></i></div>
+          <div class="rule"></div>
+        </div>
+        <h1>Stool</h1>
+      </div>
+
+      <p class="lede">A poop journal.</p>
+      <p class="sub">
+        Log it in about fifteen seconds, see what keeps showing up before a bad
+        one, and print something you can hand to a doctor.
+      </p>
+
+      <div class="foot">
+        <b>seanjoudrie.github.io/stool</b>
+        <span>Free. Works offline. Never leaves your phone.</span>
+      </div>
+    </div>
+  </body>
+</html>

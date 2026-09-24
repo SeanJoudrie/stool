@@ -12,7 +12,7 @@ import { useStore } from '../store'
 import * as db from '../db/db'
 import { buildSeedEpisode } from '../lib/seed'
 import { formatBytes } from '../lib/image'
-import { AppBar, Alert, Card, NumberField, Segmented, SwitchRow } from '../components/ui'
+import { AppBar, Alert, Card, NumberField, Segmented, Spinner, SwitchRow } from '../components/ui'
 import { IconDownload, IconLock, IconTrash, IconUpload } from '../components/icons'
 
 const THEMES: { id: ThemePref; label: string }[] = [
@@ -162,7 +162,7 @@ export function Settings() {
                 onClick={() => handleExport(false)}
                 disabled={busy}
               >
-                <IconDownload />
+                {busy ? <Spinner /> : <IconDownload />}
                 Export entries
               </button>
               <button
@@ -170,7 +170,7 @@ export function Settings() {
                 onClick={() => handleExport(true)}
                 disabled={busy}
               >
-                <IconDownload />
+                {busy ? <Spinner /> : <IconDownload />}
                 Export entries and photographs
               </button>
               <p className="field__hint">
@@ -181,7 +181,7 @@ export function Settings() {
               </p>
 
               <label className="btn btn--secondary btn--block" style={{ cursor: 'pointer' }}>
-                <IconUpload />
+                {busy ? <Spinner /> : <IconUpload />}
                 Import a previous export
                 <input
                   type="file"
@@ -212,7 +212,7 @@ export function Settings() {
 
           <Card title="Danger zone">
             <button className="btn btn--danger btn--block" onClick={handleWipe} disabled={busy}>
-              <IconTrash />
+              {busy ? <Spinner /> : <IconTrash />}
               Delete everything on this device
             </button>
           </Card>

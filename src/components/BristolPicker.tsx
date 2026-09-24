@@ -118,8 +118,8 @@ export function BristolPicker({
   const selected = value ? BRISTOL[value - 1] : null
 
   return (
-    <fieldset className="field" style={{ border: 0, margin: 0, padding: 0 }}>
-      <legend className="field__label" style={{ width: '100%', padding: 0 }}>
+    <fieldset className="field fieldset">
+      <legend className="field__label">
         <span>Form</span>
         {value && <span className="field__value">Type {value}</span>}
       </legend>

@@ -79,7 +79,7 @@ export function Report() {
                 <IconPrint />
                 Print, or save as PDF
               </button>
-              <p className="field__hint" style={{ marginTop: 'var(--s2)' }}>
+              <p className="field__hint note">
                 Photographs are never included in the printed report. Show them from the app if you
                 choose to.
               </p>
@@ -96,7 +96,7 @@ export function Report() {
             </header>
 
             <Section title="Summary">
-              <table className="table">
+              <div className="table-wrap"><table className="table">
                 <tbody>
                   <tr>
                     <td>Stool events recorded</td>
@@ -137,7 +137,7 @@ export function Report() {
                     <td>{summary.avgWaterOz !== null ? `${Math.round(summary.avgWaterOz)} oz/day` : '—'}</td>
                   </tr>
                 </tbody>
-              </table>
+              </table></div>
             </Section>
 
             {flags.length > 0 && (
@@ -162,7 +162,7 @@ export function Report() {
             )}
 
             <Section title="Distribution of stool form">
-              <table className="table">
+              <div className="table-wrap"><table className="table">
                 <thead>
                   <tr>
                     <th scope="col">Bristol type</th>
@@ -181,7 +181,7 @@ export function Report() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </Section>
 
             {result.ready && result.triggers.length > 0 && (
@@ -190,7 +190,7 @@ export function Report() {
                   Patient-recorded associations only. Windows tested: 2, 6, 12, 24 and 48 hours. Not
                   adjusted for multiple comparisons.
                 </p>
-                <table className="table">
+                <div className="table-wrap"><table className="table">
                   <thead>
                     <tr>
                       <th scope="col">Exposure</th>
@@ -215,13 +215,13 @@ export function Report() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </Section>
             )}
 
             {notable.length > 0 && (
               <Section title="Notable events">
-                <table className="table">
+                <div className="table-wrap"><table className="table">
                   <thead>
                     <tr>
                       <th scope="col">When</th>
@@ -246,12 +246,12 @@ export function Report() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </Section>
             )}
 
             <Section title="Complete event log">
-              <table className="table">
+              <div className="table-wrap"><table className="table">
                 <thead>
                   <tr>
                     <th scope="col">When</th>
@@ -274,7 +274,7 @@ export function Report() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </Section>
 
             <footer className="report__foot">

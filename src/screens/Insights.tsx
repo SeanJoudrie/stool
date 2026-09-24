@@ -86,7 +86,7 @@ export function Insights() {
               subtitle="Each day, stacked by how loose or hard things were. Gaps are days with nothing logged."
               legend={<BandLegend />}
               table={
-                <table className="table">
+                <div className="table-wrap"><table className="table">
                   <thead>
                     <tr>
                       <th scope="col">Day</th>
@@ -105,7 +105,7 @@ export function Insights() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               }
             >
               <DailyBandChart days={result.days} />
@@ -118,7 +118,7 @@ export function Insights() {
               subtitle="Types 3 to 5 are the normal range."
               legend={<BandLegend />}
               table={
-                <table className="table">
+                <div className="table-wrap"><table className="table">
                   <thead>
                     <tr>
                       <th scope="col">Type</th>
@@ -135,7 +135,7 @@ export function Insights() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               }
             >
               <BristolChart data={result.bristol} />
@@ -148,7 +148,7 @@ export function Insights() {
                 title="What keeps showing up first"
                 subtitle={`How often a bad one followed each of these. You average ${Math.round(baseline * 100)}%.`}
                 table={
-                  <table className="table">
+                  <div className="table-wrap"><table className="table">
                     <thead>
                       <tr>
                         <th scope="col">Before it</th>
@@ -167,7 +167,7 @@ export function Insights() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 }
               >
                 <CorrelationBars bars={bars} baseline={baseline} />

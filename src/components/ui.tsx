@@ -140,8 +140,8 @@ export function Scale({
   colourByRating?: boolean
 }) {
   return (
-    <fieldset className="field" style={{ border: 0, margin: 0, padding: 0 }}>
-      <legend className="field__label" style={{ width: '100%', padding: 0 }}>
+    <fieldset className="field fieldset">
+      <legend className="field__label">
         <span>{label}</span>
         {value !== null && <span className="field__value">{value}/10</span>}
       </legend>
@@ -185,8 +185,8 @@ export function ChipGroup<T extends string>({
   alertIds?: readonly T[]
 }) {
   return (
-    <fieldset className="field" style={{ border: 0, margin: 0, padding: 0 }}>
-      <legend className="field__label" style={{ width: '100%', padding: 0 }}>
+    <fieldset className="field fieldset">
+      <legend className="field__label">
         {label}
       </legend>
       <div className="chipgroup">
@@ -312,4 +312,27 @@ export function NumberField({
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return <p className="empty">{children}</p>
+}
+
+/** The one spinner in the app. */
+export function Spinner({ small }: { small?: boolean }) {
+  return <span className={`spinner${small ? ' spinner--sm' : ''}`} aria-hidden="true" />
+}
+
+/**
+ * The home screen's own shape, greyed out, shown while the journal loads.
+ * Matching the real layout is the point — a skeleton that does not match just
+ * moves the layout jump slightly later.
+ */
+export function HomeSkeleton() {
+  return (
+    <div className="stack" aria-hidden="true">
+      <div className="skeleton skeleton--hero" />
+      <div className="home-pair">
+        <div className="skeleton skeleton--tile" />
+        <div className="skeleton skeleton--tile" />
+      </div>
+      <div className="skeleton skeleton--wide" />
+    </div>
+  )
 }

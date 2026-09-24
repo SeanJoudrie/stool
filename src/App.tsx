@@ -10,7 +10,7 @@ import { Settings } from './screens/Settings'
 import { LogStool } from './screens/LogStool'
 import { LogFood } from './screens/LogFood'
 import { Voice } from './screens/Voice'
-import { Alert } from './components/ui'
+import { Alert, HomeSkeleton } from './components/ui'
 import { IconHome, IconInsights, IconSettings, IconToday } from './components/icons'
 
 // Four tabs, and Report deliberately is not one of them — it is reachable from
@@ -52,9 +52,15 @@ export function App() {
 
   if (!ready) {
     return (
-      <div className="app">
+      <div className="app has-tabbar">
+        <header className="appbar">
+          <h1 className="appbar__title">Stool</h1>
+        </header>
         <main className="main">
-          <p className="empty">Opening your journal…</p>
+          <HomeSkeleton />
+          <p className="sr-only" role="status">
+            Opening your journal
+          </p>
         </main>
       </div>
     )
